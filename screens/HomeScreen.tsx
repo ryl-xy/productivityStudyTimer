@@ -2,13 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
 import { usePersistentTimer } from '../hooks/usePersistentTimer';
 import CupButton from '../components/CupButton';
-import { HomeScreenNavigationProp } from '../types/navigation';
+import { HomeScreenProps } from '../types/navigation';
 
-type Props = {
-    navigation: HomeScreenNavigationProp;
-};
-
-export default function HomeScreen({ navigation }: Props) {
+export default function HomeScreen({ navigation }: HomeScreenProps) {
     const { formattedTime, isRunning, startTimer, stopTimer } = usePersistentTimer();
 
     return (
@@ -27,12 +23,16 @@ export default function HomeScreen({ navigation }: Props) {
 
                 <TouchableOpacity
                     style={[styles.startButton, isRunning && styles.stopButton]}
-                    onPress={() => isRunning ? stopTimer() : startTimer()}
+                    onPress={() => {
+                        if(isRunning){
+                            stopTimer();
+                        } else {
+                            navigation.navigate('TimerFlow', { screen: 'TimerSelection' });
+                        }
+                    }}
                 >
-                    <Text style={styles.buttonText}>{isRunning ? 'Pause ☕' : 'Start Sipping ✨'}</Text>
+                    <Text style={styles.buttonText}>{isRunning ? 'Pause ☕' : 'Start Studying ✨'}</Text>
                 </TouchableOpacity>
-
-                {/* <CupButton onPress={() => navigation.navigate('Timer')} /> */}
             </View>
         </ImageBackground>
     );
@@ -43,13 +43,20 @@ const styles = StyleSheet.create({
 
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(255, 248, 220, 0.9)',
+        // backgroundColor: 'rgba(255, 248, 220, 0.9)',
         alignItems: 'center',
         justifyContent: 'center',
     },
 
+    title: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginBottom: 40,
+    },
+
     timerCard: {
-        backgroundColor: '#fff',
+        backgroundColor: 'rgba(255, 248, 220, 0.9)',
         borderRadius: 20,
         padding: 30,
         margin: 20,
@@ -90,10 +97,4 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
 
-    title: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#5c3a21',
-        marginBottom: 40,
-    }
 });

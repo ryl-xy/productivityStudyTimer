@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert } from 'react-native';
+
 
 const STORAGE_KEYS = {
     TOTAL_TIME: 'total_study_time',
@@ -12,8 +12,8 @@ const STORAGE_KEYS = {
 export const usePersistentTimer = () => {
     const [totalTime, setTotalTime] = useState(0);
     const [isRunning, setIsRunning] = useState(false);
-    const intervalRef = useRef(null);
-    const lastStartTimeRef = useRef(null);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const lastStartTimeRef = useRef<number | null>(null);
 
     //load saved data on mount
     useEffect(() => {
@@ -83,6 +83,14 @@ export const usePersistentTimer = () => {
         await AsyncStorage.setItem(STORAGE_KEYS.TOTAL_TIME, '0');
     };
 
+    const addTime = async (seconds) => {
+        setTotalTime(prev => {
+            const newTotal = prev + seconds;
+            AsyncStorage.setItem(STORAGE_KEYS.TOTAL_TIME, newTotal.toString());
+            return newTotal;
+        });
+    }
+
     //format time for displat in HH:MM:SS
     const formattedTime = () => {
         const hours = Math.floor(totalTime / 3600);
@@ -91,5 +99,5 @@ export const usePersistentTimer = () => {
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     };
 
-    return { totalTime, formattedTime: formattedTime(), isRunning, startTimer, stopTimer, resetTimer };
+    return { totalTime, formattedTime: formattedTime(), isRunning, startTimer, stopTimer, resetTimer, addTime };
 };
