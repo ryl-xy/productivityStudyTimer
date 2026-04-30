@@ -1,5 +1,5 @@
 // screens/TimerSelectionScreen.tsx
-import React, { useState } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -9,34 +9,72 @@ import {
   FlatList,
   TextInput,
   Alert,
+  ToastAndroid,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { TimerSelectionScreenProps } from '../types/navigation';
+import {TimerSelectionScreenProps} from '../types/navigation';
+import baseUrl from '../API/index';
 
 interface Subject {
-  id: string;
+  id: string | number;
   name: string;
-  icon: string;
+  drink_icon: string;
+  color?: string;
 }
 
 const DRINK_ICONS = [
-  { id: '1', name: '☕', label: 'Coffee' },
-  { id: '2', name: '🍵', label: 'Tea' },
-  { id: '3', name: '🥤', label: 'Soda' },
-  { id: '4', name: '🧋', label: 'Bubble Tea' },
+  {id: '1', name: '☕', label: 'Coffee'},
+  {id: '2', name: '🍵', label: 'Tea'},
+  {id: '3', name: '🥤', label: 'Soda'},
+  {id: '4', name: '🧋', label: 'Bubble Tea'},
 ];
 
-export default function TimerSelectionScreen({ navigation }: TimerSelectionScreenProps) {
-  const [subjects, setSubjects] = useState<Subject[]>([
-    { id: '1', name: 'Mathematics', icon: '☕' },
-    { id: '2', name: 'Science', icon: '🍵' },
-    { id: '3', name: 'History', icon: '🥤' },
-    { id: '4', name: 'Programming', icon: '🧋' },
-  ]);
+// Hardcoded subjects to seed database on first load
+const HARDCODED_SUBJECTS = [
+  {name: 'Mathematics', drink_icon: '☕', color: '#FF5733'},
+  {name: 'Science', drink_icon: '🍵', color: '#33FF57'},
+  {name: 'History', drink_icon: '🥤', color: '#3357FF'},
+  {name: 'Programming', drink_icon: '🧋', color: '#FF33F5'},
+];
+
+export default function TimerSelectionScreen({
+  navigation,
+}: TimerSelectionScreenProps) {
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [showAddSubject, setShowAddSubject] = useState(false);
   const [newSubjectName, setNewSubjectName] = useState('');
   const [selectedDrink, setSelectedDrink] = useState('☕');
   const [showDrinkPicker, setShowDrinkPicker] = useState(false);
+
+  // Fetch subjects from backend
+  const fetchSubjects = () => {
+    fetch(baseUrl + '/api/subjects')
+      .then(res => res.json())
+      .then(data => {
+        setSubjects(data);
+      })
+      .catch(error => {
+        console.error('Error fetching subjects:', error);
+        ToastAndroid.show('Failed to load subjects', ToastAndroid.SHORT);
+      });
+  };
+
+  // Seed database with hardcoded subjects on first load
+  const seedDatabase = () => {
+    HARDCODED_SUBJECTS.forEach(subject => {
+      fetch(baseUrl + '/api/subjects', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(subject),
+      }).catch(error => console.error('Error seeding subject:', error));
+    });
+  };
+
+  useEffect(() => {
+    fetchSubjects();
+    // Attempt to seed database - if subjects already exist, this won't duplicate them
+    seedDatabase();
+  }, []);
 
   const addSubject = () => {
     if (!newSubjectName.trim()) {
@@ -44,45 +82,74 @@ export default function TimerSelectionScreen({ navigation }: TimerSelectionScree
       return;
     }
 
-    const newSubject: Subject = {
-      id: Date.now().toString(),
-      name: newSubjectName,
-      icon: selectedDrink,
+    // Generate a random color
+    const colors = [
+      '#FF5733',
+      '#33FF57',
+      '#3357FF',
+      '#FF33F5',
+      '#FFD700',
+      '#FF6B6B',
+    ];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+    const subjectData = {
+      name: newSubjectName.trim(),
+      drink_icon: selectedDrink,
+      color: randomColor,
     };
 
-    setSubjects([...subjects, newSubject]);
-    setNewSubjectName('');
-    setShowAddSubject(false);
-    setSelectedDrink('☕');
+    // POST to backend
+    fetch(baseUrl + '/api/subjects', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(subjectData),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.affected > 0) {
+          ToastAndroid.show('Subject added!', ToastAndroid.SHORT);
+          setNewSubjectName('');
+          setShowAddSubject(false);
+          setSelectedDrink('☕');
+          // Refresh subjects list
+          fetchSubjects();
+        }
+      })
+      .catch(error => {
+        console.error('Error adding subject:', error);
+        ToastAndroid.show('Failed to add subject', ToastAndroid.SHORT);
+      });
   };
 
-  const handleTimerSelect = (subject: Subject, timerType: 'countup' | 'pomodoro') => {
+  const handleTimerSelect = (
+    subject: Subject,
+    timerType: 'countup' | 'pomodoro',
+  ) => {
     if (timerType === 'countup') {
-      navigation.navigate('CountUpTimer', { subjectName: subject.name });
+      navigation.navigate('CountUpTimer', {subjectName: subject.name});
     } else {
-      navigation.navigate('PomodoroTimer', { subjectName: subject.name });
+      navigation.navigate('PomodoroTimer', {subjectName: subject.name});
     }
   };
 
-  const renderSubject = ({ item }: { item: Subject }) => (
+  const renderSubject = ({item}: {item: Subject}) => (
     <View style={styles.subjectCard}>
       <View style={styles.subjectInfo}>
-        <Text style={styles.subjectIcon}>{item.icon}</Text>
+        <Text style={styles.subjectIcon}>{item.drink_icon}</Text>
         <Text style={styles.subjectName}>{item.name}</Text>
       </View>
-      
+
       <View style={styles.timerButtons}>
         <TouchableOpacity
           style={[styles.timerButton, styles.countUpButton]}
-          onPress={() => handleTimerSelect(item, 'countup')}
-        >
+          onPress={() => handleTimerSelect(item, 'countup')}>
           <Text style={styles.timerButtonText}>⏱️ Count Up</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           style={[styles.timerButton, styles.pomodoroButton]}
-          onPress={() => handleTimerSelect(item, 'pomodoro')}
-        >
+          onPress={() => handleTimerSelect(item, 'pomodoro')}>
           <Text style={styles.timerButtonText}>🍅 Pomodoro</Text>
         </TouchableOpacity>
       </View>
@@ -90,13 +157,16 @@ export default function TimerSelectionScreen({ navigation }: TimerSelectionScree
   );
 
   return (
-    <ImageBackground source={require('../assets/background.jpg')} style={styles.background} blurRadius={2}>
+    <ImageBackground
+      source={require('../assets/background.jpg')}
+      style={styles.background}
+      blurRadius={2}>
       <View style={styles.overlay}>
         <Text style={styles.title}>📚 Choose Your Study Session</Text>
 
         <FlatList
           data={subjects}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id.toString()}
           renderItem={renderSubject}
           contentContainerStyle={styles.listContainer}
         />
@@ -110,11 +180,10 @@ export default function TimerSelectionScreen({ navigation }: TimerSelectionScree
               value={newSubjectName}
               onChangeText={setNewSubjectName}
             />
-            
+
             <TouchableOpacity
               style={styles.drinkSelector}
-              onPress={() => setShowDrinkPicker(!showDrinkPicker)}
-            >
+              onPress={() => setShowDrinkPicker(!showDrinkPicker)}>
               <Text style={styles.selectedDrink}>
                 Choose drink: {selectedDrink}
               </Text>
@@ -122,15 +191,14 @@ export default function TimerSelectionScreen({ navigation }: TimerSelectionScree
 
             {showDrinkPicker && (
               <View style={styles.drinkPicker}>
-                {DRINK_ICONS.map((drink) => (
+                {DRINK_ICONS.map(drink => (
                   <TouchableOpacity
                     key={drink.id}
                     style={styles.drinkOption}
                     onPress={() => {
                       setSelectedDrink(drink.name);
                       setShowDrinkPicker(false);
-                    }}
-                  >
+                    }}>
                     <Text style={styles.drinkIcon}>{drink.name}</Text>
                     <Text style={styles.drinkLabel}>{drink.label}</Text>
                   </TouchableOpacity>
@@ -139,14 +207,16 @@ export default function TimerSelectionScreen({ navigation }: TimerSelectionScree
             )}
 
             <View style={styles.formButtons}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => {
-                setShowAddSubject(false);
-                setNewSubjectName('');
-                setSelectedDrink('☕');
-              }}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => {
+                  setShowAddSubject(false);
+                  setNewSubjectName('');
+                  setSelectedDrink('☕');
+                }}>
                 <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity style={styles.saveButton} onPress={addSubject}>
                 <Text style={styles.buttonText}>Add Subject</Text>
               </TouchableOpacity>
@@ -155,8 +225,7 @@ export default function TimerSelectionScreen({ navigation }: TimerSelectionScree
         ) : (
           <TouchableOpacity
             style={styles.addButton}
-            onPress={() => setShowAddSubject(true)}
-          >
+            onPress={() => setShowAddSubject(true)}>
             <Icon name="add-circle" size={24} color="#FFF" />
             <Text style={styles.addButtonText}>Add New Subject</Text>
           </TouchableOpacity>
@@ -167,7 +236,7 @@ export default function TimerSelectionScreen({ navigation }: TimerSelectionScree
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1 },
+  background: {flex: 1},
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
