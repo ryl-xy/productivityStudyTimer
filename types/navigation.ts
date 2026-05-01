@@ -20,8 +20,6 @@ export type RootStackParamList = {
 
 export type TodoStackParamList = {
   TodoList: undefined;
-  ViewTodo: {todoId: number};
-  EditTodo: {todoId?: number; subjectId?: number; subjectName?: string};
 };
 
 //navigation prop types
@@ -45,14 +43,6 @@ export type TodoScreenNavigationProp = StackNavigationProp<
   TodoStackParamList,
   'TodoList'
 >;
-export type EditTodoScreenNavigationProp = StackNavigationProp<
-  TodoStackParamList,
-  'EditTodo'
->;
-export type ViewTodoScreenNavigationProp = StackNavigationProp<
-  TodoStackParamList,
-  'ViewTodo'
->;
 
 //route prop types
 export type CountUpTimerScreenRouteProp = RouteProp<
@@ -63,8 +53,6 @@ export type PomodoroTimerScreenRouteProp = RouteProp<
   TimerStackParamList,
   'PomodoroTimer'
 >;
-export type ViewTodoScreenRouteProp = RouteProp<TodoStackParamList, 'ViewTodo'>;
-export type EditTodoScreenRouteProp = RouteProp<TodoStackParamList, 'EditTodo'>;
 
 //combined prop types
 export type CountUpTimerScreenProps = {
@@ -87,13 +75,4 @@ export type HomeScreenProps = {
 
 export type ToDoListScreenProp = {
   navigation: TodoScreenNavigationProp;
-};
-
-export type EditTodoScreenProp = {
-  navigation: EditTodoScreenNavigationProp;
-  route: EditTodoScreenRouteProp;
-};
-export type ViewTodoScreenProp = {
-  navigation: ViewTodoScreenNavigationProp;
-  route: ViewTodoScreenRouteProp;
 };

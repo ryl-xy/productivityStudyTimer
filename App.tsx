@@ -15,8 +15,6 @@ import TimerSelectionScreen from './screens/TimerSelectionScreen';
 import CountUpTimerScreen from './screens/CountUpTimerScreen';
 import PomodoroTimerScreen from './screens/PomodoroTimerScreen';
 import TodoScreen from './screens/TodoScreen';
-import EditTodoScreen from './screens/EditTodoScreen';
-import ViewTodoScreen from './screens/ViewTodoScreen';
 import {LogBox} from 'react-native';
 LogBox.ignoreLogs([
   'Non-serializable values were found in the navigation state',
@@ -51,7 +49,7 @@ function MainTabNavigator() {
             iconName = focused ? 'home' : 'home-outline';
             // } else if(route.name === 'Timer'){
             //     iconName = focused ? 'timer' : 'timer-outline';
-          } else if (route.name === 'TodoFlow') {
+          } else if (route.name === 'Todo') {
             iconName = focused ? 'checkbox' : 'checkbox-outline';
           } else {
             iconName = 'help-circle-outline';
@@ -66,7 +64,11 @@ function MainTabNavigator() {
       })}>
       <Tab.Screen name="Home" component={HomeScreen} />
       {/* <Tab.Screen name='Timer' component={TimerStackNavigator}/> */}
-      <Tab.Screen name="Todo" component={TodoStackNavigator} />
+      <Tab.Screen
+        name="Todo"
+        component={TodoScreen}
+        options={{tabBarLabel: 'To Do List'}}
+      />
       {/* add screens here */}
     </Tab.Navigator>
   );
@@ -88,27 +90,17 @@ function RootStackNavigator() {
   );
 }
 
-function TodoStackNavigator() {
-  return (
-    <TodoStack.Navigator screenOptions={{headerShown: false}}>
-      <TodoStack.Screen
-        name="TodoList"
-        component={TodoScreen}
-        options={{title: 'My Places'}}
-      />
-      <TodoStack.Screen
-        name="ViewTodo"
-        component={ViewTodoScreen}
-        options={{title: 'Add To-Do'}}
-      />
-      <TodoStack.Screen
-        name="EditTodo"
-        component={EditTodoScreen}
-        options={{title: 'Place Details'}}
-      />
-    </TodoStack.Navigator>
-  );
-}
+// function TodoStackNavigator() {
+//   return (
+//     <TodoStack.Navigator screenOptions={{headerShown: true}}>
+//       <TodoStack.Screen
+//         name="TodoList"
+//         component={TodoScreen}
+//         options={{title: 'My Places'}}
+//       />
+//     </TodoStack.Navigator>
+//   );
+// }
 
 export default function App() {
   return (
@@ -119,6 +111,12 @@ export default function App() {
           drawerActiveTintColor: '#8b4513',
         }}>
         <Drawer.Screen name="Home" component={RootStackNavigator} />
+        <Drawer.Screen
+          name="Todo"
+          component={TodoScreen}
+          options={{drawerLabel: 'To Do List'}}
+        />
+
         {/* add more drawer screens here */}
       </Drawer.Navigator>
     </NavigationContainer>

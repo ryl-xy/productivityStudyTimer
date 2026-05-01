@@ -1,4 +1,3 @@
-// screens/TodoScreen.tsx - Following "My Places" pattern
 import React, {useState, useEffect} from 'react';
 import {
   View,
@@ -11,34 +10,37 @@ import {
   Modal,
   TextInput,
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Icon from 'react-native-vector-icons/Ionicons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import baseUrl from '../API/index';
+import {AddTaskModal, EditTodoModal} from '../components/TaskModal';
+import {TodoDetailModal} from '../components/TodoDetailModal';
 
-// Simple Todo Item Component
 const TodoItem = ({todo, subjectColor, onToggle, onPress}: any) => {
   const getPriorityColor = () => {
     switch (todo.priority) {
       case 'high':
-        return '#FF4444';
+        return '#f58a8a';
       case 'medium':
-        return '#FFA500';
+        return '#f0d39b';
       case 'low':
-        return '#4CAF50';
+        return '#b2d0b3';
       default:
         return '#F5F5F5';
     }
   };
 
   return (
-    <TouchableOpacity
-      style={[styles.todoItem, {backgroundColor: getPriorityColor()}]}
-      onPress={onPress}
-      activeOpacity={0.7}>
+    <TouchableOpacity style={[styles.todoItem]} onPress={onPress}>
       <TouchableOpacity
         style={styles.checkbox}
         onPress={() => onToggle(todo.id, !todo.is_completed)}>
-        <Text style={styles.checkboxIcon}>
-          {todo.is_completed ? '✅' : '⬜'}
+        <Text>
+          {todo.is_completed ? (
+            <FontAwesome name="check-square-o" size={24} />
+          ) : (
+            <FontAwesome name="square-o" size={24} />
+          )}
         </Text>
       </TouchableOpacity>
 
@@ -51,23 +53,19 @@ const TodoItem = ({todo, subjectColor, onToggle, onPress}: any) => {
           {todo.title}
         </Text>
         {todo.priority !== 'no' && (
-          <View
-            style={[
-              styles.priorityBadge,
-              {backgroundColor: getPriorityColor()},
-            ]}>
-            <Text style={styles.priorityText}>
+          <View style={[styles.priorityBadge, ,]}>
+            <Text style={[styles.priorityText, {color: getPriorityColor()}]}>
               {todo.priority === 'high'
-                ? '🔴 High'
+                ? 'High Priority'
                 : todo.priority === 'medium'
-                ? '🟠 Medium'
-                : '🟢 Low'}
+                ? 'Medium Priority'
+                : 'Low Priority'}
             </Text>
           </View>
         )}
         {todo.due_date && (
           <Text style={styles.dueDate}>
-            📅 {new Date(todo.due_date).toLocaleDateString()}
+            {new Date(todo.due_date).toLocaleDateString()}
           </Text>
         )}
       </View>
@@ -75,325 +73,7 @@ const TodoItem = ({todo, subjectColor, onToggle, onPress}: any) => {
   );
 };
 
-// Add Task Modal (full taskDetails: title, description, priority, due_date)
-const AddTaskModal = ({visible, subject, onClose, onAdd}: any) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState('no');
-  const [dueDate, setDueDate] = useState('');
-
-  const handleAdd = () => {
-    if (!title.trim()) {
-      ToastAndroid.show('Please enter a task title', ToastAndroid.SHORT);
-      return;
-    }
-    onAdd({
-      title: title.trim(),
-      description: description.trim() || null,
-      subject_id: subject.subject_id,
-      priority,
-      due_date: dueDate ? new Date(dueDate).toISOString() : null,
-    });
-    setTitle('');
-    setDescription('');
-    setPriority('no');
-    setDueDate('');
-    onClose();
-  };
-
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View
-          style={[
-            styles.addModal,
-            {borderTopColor: subject?.color || '#8B4513'},
-          ]}>
-          <Text style={styles.addModalTitle}>
-            Add Task to {subject?.drink_icon} {subject?.subject_name}
-          </Text>
-
-          <TextInput
-            style={styles.taskInput}
-            placeholder="Enter task title..."
-            value={title}
-            onChangeText={setTitle}
-            autoFocus
-          />
-
-          <TextInput
-            style={[styles.taskInput, styles.textArea]}
-            placeholder="Description (optional)"
-            value={description}
-            onChangeText={setDescription}
-            multiline
-          />
-
-          <View style={styles.priorityContainer}>
-            <Text style={styles.pickerLabel}>Priority</Text>
-            <View style={styles.priorityOptions}>
-              {['no', 'low', 'medium', 'high'].map(p => (
-                <TouchableOpacity
-                  key={p}
-                  style={[
-                    styles.priorityOption,
-                    priority === p && styles.priorityOptionSelected,
-                  ]}
-                  onPress={() => setPriority(p)}>
-                  <Text style={{fontSize: 12, fontWeight: '600'}}>
-                    {p === 'no'
-                      ? '⚪'
-                      : p === 'low'
-                      ? '🟢'
-                      : p === 'medium'
-                      ? '🟠'
-                      : '🔴'}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          <TextInput
-            style={styles.taskInput}
-            placeholder="Due date (YYYY-MM-DD)"
-            value={dueDate}
-            onChangeText={setDueDate}
-          />
-
-          <View style={styles.modalButtons}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.addBtn, {backgroundColor: subject?.color}]}
-              onPress={handleAdd}>
-              <Text style={styles.addBtnText}>Add Task</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-};
-
-// Todo Detail Modal (like ViewScreen) - with Start Timer button
-const TodoDetailModal = ({
-  visible,
-  todo,
-  onClose,
-  onDelete,
-  onEdit,
-  onStartTimer,
-}: any) => {
-  if (!todo) return null;
-
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View
-          style={[
-            styles.detailModal,
-            {borderTopColor: todo.subject_color || '#8B4513'},
-          ]}>
-          <View style={styles.detailHeader}>
-            <Text style={styles.subjectIcon}>{todo.subject_icon}</Text>
-            <Text style={styles.subjectName}>{todo.subject_name}</Text>
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-              <Ionicons name="close" size={24} color="#666" />
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.detailTitle}>{todo.title}</Text>
-
-          {todo.priority !== 'no' && (
-            <View
-              style={[
-                styles.detailPriority,
-                {
-                  backgroundColor:
-                    todo.priority === 'high'
-                      ? '#FF4444'
-                      : todo.priority === 'medium'
-                      ? '#FFA500'
-                      : '#4CAF50',
-                },
-              ]}>
-              <Text style={styles.detailPriorityText}>
-                {todo.priority === 'high'
-                  ? '🔴 High Priority'
-                  : todo.priority === 'medium'
-                  ? '🟠 Medium Priority'
-                  : '🟢 Low Priority'}
-              </Text>
-            </View>
-          )}
-
-          {todo.description && (
-            <View style={styles.detailSection}>
-              <Text style={styles.detailLabel}>Description</Text>
-              <Text style={styles.detailText}>{todo.description}</Text>
-            </View>
-          )}
-
-          {todo.due_date && (
-            <View style={styles.detailSection}>
-              <Text style={styles.detailLabel}>Due Date</Text>
-              <Text style={styles.detailText}>
-                📅 {new Date(todo.due_date).toLocaleDateString()}
-              </Text>
-            </View>
-          )}
-
-          <View style={styles.detailActions}>
-            <TouchableOpacity
-              style={[styles.actionBtn, styles.timerBtn]}
-              onPress={onStartTimer}>
-              <Ionicons name="timer-outline" size={20} color="white" />
-              <Text style={styles.actionBtnText}>Timer</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionBtn, styles.editBtn]}
-              onPress={onEdit}>
-              <Ionicons name="create-outline" size={20} color="white" />
-              <Text style={styles.actionBtnText}>Edit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionBtn, styles.deleteBtn]}
-              onPress={onDelete}>
-              <Ionicons name="trash-outline" size={20} color="white" />
-              <Text style={styles.actionBtnText}>Delete</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-};
-
-// Edit Todo Modal (like EditScreen)
-const EditTodoModal = ({visible, todo, subjects, onClose, onSave}: any) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [subjectId, setSubjectId] = useState(null);
-  const [priority, setPriority] = useState('no');
-  const [dueDate, setDueDate] = useState<Date | null>(null);
-
-  useEffect(() => {
-    if (todo) {
-      setTitle(todo.title || '');
-      setDescription(todo.description || '');
-      setSubjectId(todo.subject_id);
-      setPriority(todo.priority || 'no');
-      setDueDate(todo.due_date ? new Date(todo.due_date) : null);
-    }
-  }, [todo]);
-
-  const handleSave = () => {
-    if (!title.trim()) {
-      ToastAndroid.show('Please enter a title', ToastAndroid.SHORT);
-      return;
-    }
-    onSave({
-      title: title.trim(),
-      description,
-      subject_id: subjectId,
-      priority,
-      due_date: dueDate ? dueDate.toISOString() : null,
-    });
-    onClose();
-  };
-
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View style={styles.editModal}>
-          <Text style={styles.editModalTitle}>✏️ Edit Task</Text>
-
-          <TextInput
-            style={styles.editInput}
-            placeholder="Task title"
-            value={title}
-            onChangeText={setTitle}
-          />
-
-          <TextInput
-            style={[styles.editInput, styles.textArea]}
-            placeholder="Description (optional)"
-            value={description}
-            onChangeText={setDescription}
-            multiline
-          />
-
-          <View style={styles.pickerContainer}>
-            <Text style={styles.pickerLabel}>Subject</Text>
-            {subjects.map((sub: any) => (
-              <TouchableOpacity
-                key={sub.id}
-                style={[
-                  styles.subjectOption,
-                  subjectId === sub.id && styles.subjectOptionSelected,
-                ]}
-                onPress={() => setSubjectId(sub.id)}>
-                <Text>
-                  {sub.drink_icon} {sub.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <View style={styles.priorityContainer}>
-            <Text style={styles.pickerLabel}>Priority</Text>
-            <View style={styles.priorityOptions}>
-              {['no', 'low', 'medium', 'high'].map(p => (
-                <TouchableOpacity
-                  key={p}
-                  style={[
-                    styles.priorityOption,
-                    priority === p && styles.priorityOptionSelected,
-                  ]}
-                  onPress={() => setPriority(p)}>
-                  <Text>
-                    {p === 'no'
-                      ? '⚪ No'
-                      : p === 'low'
-                      ? '🟢 Low'
-                      : p === 'medium'
-                      ? '🟠 Medium'
-                      : '🔴 High'}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.modalButtons}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-              <Text style={styles.saveBtnText}>Save</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-};
-
-// Main TodoScreen (like HomeScreen)
+//TodoScreen
 export default function TodoScreen({navigation}: any) {
   const [groupedTodos, setGroupedTodos] = useState<any[]>([]);
   const [isFetching, setIsFetching] = useState(false);
@@ -404,19 +84,16 @@ export default function TodoScreen({navigation}: any) {
   const [selectedTodo, setSelectedTodo] = useState<any>(null);
   const [subjects, setSubjects] = useState<any[]>([]);
 
-  // Fetch subjects for dropdown
   const fetchSubjects = () => {
     fetch(baseUrl + '/api/subjects')
       .then(res => res.json())
       .then(data => {
         setSubjects(data);
-        // After fetching subjects, merge with todos
         mergeSubjectsWithTodos(data);
       })
       .catch(console.error);
   };
 
-  // Merge subjects with todos so all subjects display even with no todos
   const mergeSubjectsWithTodos = (subjectsData: any[]) => {
     fetch(baseUrl + '/api/todos', {
       method: 'GET',
@@ -430,12 +107,10 @@ export default function TodoScreen({navigation}: any) {
           todosMap.set(group.subject_id, group);
         });
 
-        // For each subject, add it to the map if not already there
         const mergedData = subjectsData.map(subject => {
           if (todosMap.has(subject.id)) {
             return todosMap.get(subject.id);
           }
-          // If no todos, return subject with empty todos array
           return {
             subject_id: subject.id,
             subject_name: subject.name,
@@ -451,10 +126,9 @@ export default function TodoScreen({navigation}: any) {
   };
 
   useEffect(() => {
-    fetchSubjects(); // This will fetch subjects and merge with todos
+    fetchSubjects();
   }, []);
 
-  // Add todo with full taskDetails (title, description, subject_id, priority, due_date)
   const addTodo = (taskDetails: any) => {
     fetch(baseUrl + '/api/todos', {
       method: 'POST',
@@ -465,7 +139,7 @@ export default function TodoScreen({navigation}: any) {
       .then(data => {
         if (data.affected > 0) {
           ToastAndroid.show('Task added!', ToastAndroid.SHORT);
-          fetchSubjects(); // Refresh with merge
+          fetchSubjects();
         }
       })
       .catch(error => console.error('Error:', error));
@@ -483,7 +157,7 @@ export default function TodoScreen({navigation}: any) {
         if (data.affected > 0) {
           fetchSubjects(); // Refresh with merge
           ToastAndroid.show(
-            isCompleted ? '✅ Task completed!' : '📝 Task reopened',
+            isCompleted ? 'Task completed!' : 'Task reopened',
             ToastAndroid.SHORT,
           );
         }
@@ -502,7 +176,7 @@ export default function TodoScreen({navigation}: any) {
       .then(data => {
         if (data.affected > 0) {
           ToastAndroid.show('Task updated!', ToastAndroid.SHORT);
-          fetchSubjects(); // Refresh with merge
+          fetchSubjects();
         }
       })
       .catch(console.error);
@@ -517,14 +191,13 @@ export default function TodoScreen({navigation}: any) {
       .then(data => {
         if (data.affected > 0) {
           ToastAndroid.show('Task deleted', ToastAndroid.SHORT);
-          fetchSubjects(); // Refresh with merge
+          fetchSubjects();
           setDetailModalVisible(false);
         }
       })
       .catch(console.error);
   };
 
-  // Start timer for the selected task
   const startTimerForTask = () => {
     if (selectedTodo) {
       setDetailModalVisible(false);
@@ -552,7 +225,7 @@ export default function TodoScreen({navigation}: any) {
             setSelectedSubject(subject);
             setAddModalVisible(true);
           }}>
-          <Ionicons name="add" size={18} color="white" />
+          <Icon name="add" size={18} color="white" />
           <Text style={styles.addTaskBtnText}>Add</Text>
         </TouchableOpacity>
       </View>
@@ -576,9 +249,7 @@ export default function TodoScreen({navigation}: any) {
         ))
       ) : (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyStateText}>
-            No tasks yet. Tap "Add" to add one!
-          </Text>
+          <Text style={styles.emptyStateText}>Tap "Add" to add one.</Text>
         </View>
       )}
     </View>
@@ -599,7 +270,6 @@ export default function TodoScreen({navigation}: any) {
         contentContainerStyle={styles.list}
       />
 
-      {/* Add Task Modal */}
       <AddTaskModal
         visible={addModalVisible}
         subject={selectedSubject}
@@ -607,7 +277,6 @@ export default function TodoScreen({navigation}: any) {
         onAdd={addTodo}
       />
 
-      {/* Todo Detail Modal */}
       <TodoDetailModal
         visible={detailModalVisible}
         todo={selectedTodo}
@@ -632,7 +301,6 @@ export default function TodoScreen({navigation}: any) {
         onStartTimer={startTimerForTask}
       />
 
-      {/* Edit Todo Modal */}
       <EditTodoModal
         visible={editModalVisible}
         todo={selectedTodo}
@@ -709,9 +377,6 @@ const styles = StyleSheet.create({
   checkbox: {
     marginRight: 12,
   },
-  checkboxIcon: {
-    fontSize: 22,
-  },
   todoContent: {
     flex: 1,
   },
@@ -722,7 +387,7 @@ const styles = StyleSheet.create({
   },
   completedTitle: {
     textDecorationLine: 'line-through',
-    color: '#94A3B8',
+    color: '#b8c1cf',
   },
   priorityBadge: {
     alignSelf: 'flex-start',
@@ -733,7 +398,7 @@ const styles = StyleSheet.create({
   },
   priorityText: {
     color: 'white',
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: 'bold',
   },
   dueDate: {
@@ -751,209 +416,5 @@ const styles = StyleSheet.create({
   emptyStateText: {
     color: '#94A3B8',
     fontSize: 13,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  addModal: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 20,
-    width: '85%',
-    borderTopWidth: 5,
-  },
-  addModalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  taskInput: {
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 16,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  cancelBtn: {
-    flex: 1,
-    backgroundColor: '#E2E8F0',
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  cancelBtnText: {
-    color: '#64748B',
-    fontWeight: '600',
-  },
-  addBtn: {
-    flex: 1,
-    backgroundColor: '#8B4513',
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  addBtnText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  detailModal: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 20,
-    width: '90%',
-    maxHeight: '80%',
-    borderTopWidth: 5,
-  },
-  detailHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  detailTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#1E293B',
-    marginBottom: 12,
-  },
-  detailPriority: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    alignSelf: 'flex-start',
-    marginBottom: 16,
-  },
-  detailPriorityText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  detailSection: {
-    marginBottom: 16,
-  },
-  detailLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#64748B',
-    marginBottom: 4,
-    textTransform: 'uppercase',
-  },
-  detailText: {
-    fontSize: 15,
-    color: '#1E293B',
-  },
-  detailActions: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 20,
-    flexWrap: 'wrap',
-  },
-  actionBtn: {
-    flex: 1,
-    minWidth: '30%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 10,
-    gap: 6,
-  },
-  timerBtn: {
-    backgroundColor: '#7C3AED',
-  },
-  editBtn: {
-    backgroundColor: '#2563EB',
-  },
-  deleteBtn: {
-    backgroundColor: '#DC2626',
-  },
-  actionBtnText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 12,
-  },
-  closeBtn: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-  },
-  editModal: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 20,
-    width: '90%',
-    maxHeight: '90%',
-  },
-  editModalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  editInput: {
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  pickerContainer: {
-    marginBottom: 12,
-  },
-  pickerLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#64748B',
-    marginBottom: 8,
-  },
-  subjectOption: {
-    padding: 10,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 8,
-    marginBottom: 4,
-  },
-  subjectOptionSelected: {
-    backgroundColor: '#DBEAFE',
-  },
-  priorityContainer: {
-    marginBottom: 16,
-  },
-  priorityOptions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  priorityOption: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  priorityOptionSelected: {
-    backgroundColor: '#DBEAFE',
-  },
-  saveBtn: {
-    flex: 1,
-    backgroundColor: '#2563EB',
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  saveBtnText: {
-    color: 'white',
-    fontWeight: '600',
   },
 });

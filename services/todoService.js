@@ -125,7 +125,7 @@ app.get('/api/todos', (req, res) => {
 
 // GET single todo
 app.get('/api/todos/:id', (req, res) => {
-  const db = new sqlite3.Database(DB_PATH);
+  const db = new sqlite3.Database(DB);
 
   db.get(
     `
@@ -151,7 +151,7 @@ app.post('/api/todos', (req, res) => {
     return res.status(400).json({error: 'Title is required'});
   }
 
-  const db = new sqlite3.Database(DB_PATH);
+  const db = new sqlite3.Database(DB);
 
   db.run(
     `INSERT INTO todos(title, description, subject_id, priority, due_date) VALUES (?, ?, ?, ?, ?)`,
@@ -221,7 +221,7 @@ app.patch('/api/todos/:id/toggle', (req, res) => {
 
 // DELETE todo
 app.delete('/api/todos/:id', (req, res) => {
-  const db = new sqlite3.Database(DB_PATH);
+  const db = new sqlite3.Database(DB);
 
   db.run(`DELETE FROM todos WHERE id = ?`, [req.params.id], function (err) {
     if (err) return res.status(500).json({error: err.message});
@@ -234,40 +234,13 @@ app.delete('/api/todos/:id', (req, res) => {
 // ============ SUBJECTS API (for dropdown) ============
 
 app.get('/api/subjects', (req, res) => {
-  const db = new sqlite3.Database(DB_PATH);
+  const db = new sqlite3.Database(DB);
 
   db.all('SELECT * FROM subjects ORDER BY name', [], (err, rows) => {
     if (err) return res.status(500).json({error: err.message});
     res.json(rows);
     db.close();
   });
-});
-
-// POST create a new subject
-app.post('/api/subjects', (req, res) => {
-  const {name, drink_icon, color} = req.body;
-
-  if (!name || !name.trim()) {
-    return res.status(400).json({error: 'Subject name is required'});
-  }
-
-  const db = new sqlite3.Database(DB_PATH);
-
-  db.run(
-    `INSERT INTO subjects(name, drink_icon, color) VALUES (?, ?, ?)`,
-    [name.trim(), drink_icon || '', color || ''],
-    function (err) {
-      if (err) {
-        if (err.message.includes('UNIQUE')) {
-          return res.status(400).json({error: 'Subject already exists'});
-        }
-        return res.status(500).json({error: err.message});
-      }
-
-      res.status(201).json({id: this.lastID, affected: this.changes});
-      db.close();
-    },
-  );
 });
 
 // Start server
