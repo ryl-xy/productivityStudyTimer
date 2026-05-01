@@ -10,14 +10,16 @@ import HomeScreen from './screens/HomeScreen';
 import TimerSelectionScreen from './screens/TimerSelectionScreen';
 import CountUpTimerScreen from './screens/CountUpTimerScreen';
 import PomodoroTimerScreen from './screens/PomodoroTimerScreen';
+import ProfileScreen from './screens/ProfileScreen.tsx';
+import { ProfileProvider } from './context/profileContext';
 
 const Tab = createBottomTabNavigator();
-const Drawer = createDrawerNavigator(); 
+const Drawer = createDrawerNavigator();
 const RootStack = createStackNavigator<RootStackParamList>();
 const TimerStack = createStackNavigator<TimerStackParamList>();
 
-function TimerStackNavigator(){
-  return(
+function TimerStackNavigator() {
+  return (
     <TimerStack.Navigator screenOptions={{ headerShown: false }}>
       <TimerStack.Screen name="TimerSelection" component={TimerSelectionScreen} />
       <TimerStack.Screen name="CountUpTimer" component={CountUpTimerScreen} />
@@ -26,36 +28,32 @@ function TimerStackNavigator(){
   );
 }
 
-function MainTabNavigator(){
-  return(
+function MainTabNavigator() {
+  return (
     <Tab.Navigator
-        screenOptions={({route}) => ({
-            tabBarIcon: ({focused, color, size}) => {
-                let iconName: string;
-                if(route.name === 'Home'){
-                    iconName = focused ? 'home' : 'home-outline';
-                // } else if(route.name === 'Timer'){
-                //     iconName = focused ? 'timer' : 'timer-outline';
-                } else {
-                    iconName = 'help-circle-outline';
-                }
-                // add more routes with icons here 
-                return <Icon name={iconName} size={size} color={color}/>;
-            },
-            tabBarActiveTintColor: '#8b4513',
-            tabBarInactiveTintColor: '#d2b48c',
-            headerShown: false,
-        })}
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: string;
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else {
+            iconName = 'help-circle-outline';
+          }
+          return <Icon name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#8b4513',
+        tabBarInactiveTintColor: '#d2b48c',
+        headerShown: false,
+      })}
     >
-        <Tab.Screen name='Home' component={HomeScreen}/>
-        {/* <Tab.Screen name='Timer' component={TimerStackNavigator}/> */}
-        {/* add screens here */}
+      <Tab.Screen name="Home" component={HomeScreen} />
+      {/* <Tab.Screen name='Timer' component={TimerStackNavigator}/> */}
     </Tab.Navigator>
   );
 }
 
 function RootStackNavigator() {
-  return(
+  return (
     <RootStack.Navigator screenOptions={{ headerShown: false }}>
       <RootStack.Screen name="Main" component={MainTabNavigator} />
       <RootStack.Screen
@@ -67,21 +65,42 @@ function RootStackNavigator() {
         }}
       />
     </RootStack.Navigator>
-  )
+  );
 }
 
-export default function App(){
-    return(
-        <NavigationContainer>
-            <Drawer.Navigator
-                screenOptions = {{
-                    drawerStyle: { backgroundColor: '#fff8dc'},
-                    drawerActiveTintColor: '#8b4513',
-                }}
-            >
-                <Drawer.Screen name='Main' component={RootStackNavigator}/>
-                {/* add more drawer screens here */}
-            </Drawer.Navigator>
-        </NavigationContainer>
-    );
+export default function App() {
+  return (
+    // ProfileProvider wraps everything so any screen can access profiles
+    <ProfileProvider>
+      <NavigationContainer>
+        <Drawer.Navigator
+          screenOptions={{
+            drawerStyle: { backgroundColor: '#fff8dc' },
+            drawerActiveTintColor: '#8b4513',
+          }}
+        >
+          <Drawer.Screen
+            name="Main"
+            component={RootStackNavigator}
+            options={{
+              drawerLabel: 'Home',
+              drawerIcon: ({ color, size }) => (
+                <Icon name="home-outline" size={size} color={color} />
+              ),
+            }}
+          />
+          <Drawer.Screen
+            name="Profiles"
+            component={ProfileScreen}
+            options={{
+              drawerLabel: 'Profiles',
+              drawerIcon: ({ color, size }) => (
+                <Icon name="person-outline" size={size} color={color} />
+              ),
+            }}
+          />
+        </Drawer.Navigator>
+      </NavigationContainer>
+    </ProfileProvider>
+  );
 }
