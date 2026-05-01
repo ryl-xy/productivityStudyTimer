@@ -73,7 +73,8 @@ export default function TimerSelectionScreen({
   useEffect(() => {
     fetchSubjects();
     // Attempt to seed database - if subjects already exist, this won't duplicate them
-    seedDatabase();
+    // console.log(subjects);
+    // seedDatabase();
   }, []);
 
   const addSubject = () => {

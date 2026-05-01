@@ -9,6 +9,7 @@ import {
   Alert,
   Modal,
   TextInput,
+  ImageBackground,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -53,19 +54,17 @@ const TodoItem = ({todo, subjectColor, onToggle, onPress}: any) => {
           {todo.title}
         </Text>
         {todo.priority !== 'no' && (
-          <View style={[styles.priorityBadge, ,]}>
-            <Text style={[styles.priorityText, {color: getPriorityColor()}]}>
-              {todo.priority === 'high'
-                ? 'High Priority'
-                : todo.priority === 'medium'
-                ? 'Medium Priority'
-                : 'Low Priority'}
-            </Text>
-          </View>
+          <Text style={[styles.priorityText, {color: getPriorityColor()}]}>
+            {todo.priority === 'high'
+              ? 'High Priority'
+              : todo.priority === 'medium'
+              ? 'Medium Priority'
+              : 'Low Priority'}
+          </Text>
         )}
         {todo.due_date && (
           <Text style={styles.dueDate}>
-            {new Date(todo.due_date).toLocaleDateString()}
+            Due Date :{new Date(todo.due_date).toLocaleDateString()}
           </Text>
         )}
       </View>
@@ -101,7 +100,6 @@ export default function TodoScreen({navigation}: any) {
     })
       .then(response => response.json())
       .then(todosData => {
-        // Create a map of todos by subject_id
         const todosMap = new Map();
         todosData.forEach((group: any) => {
           todosMap.set(group.subject_id, group);
@@ -155,7 +153,7 @@ export default function TodoScreen({navigation}: any) {
       .then(response => response.json())
       .then(data => {
         if (data.affected > 0) {
-          fetchSubjects(); // Refresh with merge
+          fetchSubjects();
           ToastAndroid.show(
             isCompleted ? 'Task completed!' : 'Task reopened',
             ToastAndroid.SHORT,
@@ -249,7 +247,7 @@ export default function TodoScreen({navigation}: any) {
         ))
       ) : (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyStateText}>Tap "Add" to add one.</Text>
+          <Text style={styles.emptyStateText}>Tap "Add" to add todo.</Text>
         </View>
       )}
     </View>
@@ -318,7 +316,7 @@ export default function TodoScreen({navigation}: any) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#c6c8ca',
   },
   list: {
     padding: 12,
@@ -389,13 +387,6 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
     color: '#b8c1cf',
   },
-  priorityBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    marginTop: 4,
-  },
   priorityText: {
     color: 'white',
     fontSize: 13,
@@ -404,7 +395,7 @@ const styles = StyleSheet.create({
   dueDate: {
     fontSize: 11,
     color: '#64748B',
-    marginTop: 4,
+    marginTop: 2,
   },
   emptyState: {
     backgroundColor: 'white',

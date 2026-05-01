@@ -1,66 +1,13 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
-const path = require('path');
-
 const app = express();
-const DB_PATH = path.join(__dirname, '../studytime.sqlite');
+const DB = 'studytime.sqlite';
 
 app.use(cors());
 app.use(express.json());
 
-// Initialize database with schema
-function initializeDatabase() {
-  const db = new sqlite3.Database(DB_PATH, err => {
-    if (err) {
-      console.error('Database connection error:', err);
-      return;
-    }
-    console.log('Connected to SQLite database');
-  });
-
-  // Create subjects table if it doesn't exist
-  db.run(
-    `CREATE TABLE IF NOT EXISTS subjects (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE,
-      drink_icon TEXT,
-      color TEXT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )`,
-    err => {
-      if (err) console.error('Error creating subjects table:', err);
-      else console.log('Subjects table ready');
-    },
-  );
-
-  // Create todos table if it doesn't exist
-  db.run(
-    `CREATE TABLE IF NOT EXISTS todos (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      description TEXT,
-      subject_id INTEGER NOT NULL,
-      priority TEXT DEFAULT 'no',
-      due_date DATETIME,
-      is_completed INTEGER DEFAULT 0,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (subject_id) REFERENCES subjects(id)
-    )`,
-    err => {
-      if (err) console.error('Error creating todos table:', err);
-      else console.log('Todos table ready');
-    },
-  );
-
-  db.close();
-}
-
-// Initialize database on startup
-initializeDatabase();
-
-// Helper function to format todo row
+// Helper function
 function getTodoRow(row) {
   return {
     id: row.id,
@@ -76,9 +23,9 @@ function getTodoRow(row) {
   };
 }
 
-// GET all todos (grouped by subject)
+// GET all todos
 app.get('/api/todos', (req, res) => {
-  const db = new sqlite3.Database(DB_PATH);
+  const db = new sqlite3.Database(DB);
 
   db.all(
     `
@@ -143,7 +90,7 @@ app.get('/api/todos/:id', (req, res) => {
   );
 });
 
-// POST create todo (full taskDetails: title, description, subject_id, priority, due_date)
+// POST create todo
 app.post('/api/todos', (req, res) => {
   const {title, description, subject_id, priority, due_date} = req.body;
 
@@ -171,12 +118,12 @@ app.post('/api/todos', (req, res) => {
   );
 });
 
-// PUT update todo (full edit)
+// PUT update todo
 app.put('/api/todos/:id', (req, res) => {
   const {title, description, subject_id, priority, due_date, is_completed} =
     req.body;
 
-  const db = new sqlite3.Database(DB_PATH);
+  const db = new sqlite3.Database(DB);
 
   db.run(
     `UPDATE todos 
@@ -205,7 +152,7 @@ app.put('/api/todos/:id', (req, res) => {
 app.patch('/api/todos/:id/toggle', (req, res) => {
   const {is_completed} = req.body;
 
-  const db = new sqlite3.Database(DB_PATH);
+  const db = new sqlite3.Database(DB);
 
   db.run(
     `UPDATE todos SET is_completed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
@@ -243,8 +190,32 @@ app.get('/api/subjects', (req, res) => {
   });
 });
 
-// Start server
-const PORT = 5000;
+app.post('/api/subjects', (req, res) => {
+  const {name, drink_icon, color} = req.body;
+
+  if (!name) {
+    return res.status(400).json({error: 'Name is required'});
+  }
+
+  const db = new sqlite3.Database(DB);
+
+  db.run(
+    `INSERT INTO subjects(name, drink_icon, color) VALUES (?, ?, ?)`,
+    [name, drink_icon, color],
+    function (err) {
+      if (err) return res.status(500).json({error: err.message});
+
+      res.status(201).json({
+        id: this.lastID,
+        affected: this.changes,
+      });
+
+      db.close();
+    },
+  );
+});
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Todo server running on http://0.0.0.0:${PORT}`);
+  console.log(`server is running on http://0.0.0.0:${PORT}`);
 });
