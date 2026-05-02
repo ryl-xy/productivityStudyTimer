@@ -1,10 +1,22 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// export interface Subject {
+//   id: string;
+//   name: string;
+//   icon: string;
+// }
 export interface Subject {
   id: string;
   name: string;
-  icon: string;
+  drink_icon: string;
+  color?: string;
 }
 
 export interface Profile {
@@ -23,7 +35,10 @@ interface ProfileContextType {
   updateProfile: (profile: Profile) => Promise<void>;
   deleteProfile: (profileId: string) => Promise<void>;
   addSubjectToProfile: (profileId: string, subject: Subject) => Promise<void>;
-  removeSubjectFromProfile: (profileId: string, subjectId: string) => Promise<void>;
+  removeSubjectFromProfile: (
+    profileId: string,
+    subjectId: string,
+  ) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -34,7 +49,7 @@ const STORAGE_KEYS = {
 
 const ProfileContext = createContext<ProfileContextType | null>(null);
 
-export function ProfileProvider({ children }: { children: ReactNode }) {
+export function ProfileProvider({children}: {children: ReactNode}) {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [activeProfile, setActiveProfileState] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,7 +66,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         STORAGE_KEYS.ACTIVE_PROFILE_ID,
       ]);
 
-      const savedProfiles: Profile[] = profilesRaw[1] ? JSON.parse(profilesRaw[1]) : [];
+      const savedProfiles: Profile[] = profilesRaw[1]
+        ? JSON.parse(profilesRaw[1])
+        : [];
       const activeId: string | null = activeIdRaw[1];
 
       // Seed a default profile if none exist
@@ -61,21 +78,28 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           name: 'My Profile',
           avatar: '🎓',
           subjects: [
-            { id: '1', name: 'Mathematics', icon: '☕' },
-            { id: '2', name: 'Science', icon: '🍵' },
-            { id: '3', name: 'History', icon: '🥤' },
-            { id: '4', name: 'Programming', icon: '🧋' },
+            {id: '1', name: 'Mathematics', drink_icon: '☕'},
+            {id: '2', name: 'Science', drink_icon: '🍵'},
+            {id: '3', name: 'History', drink_icon: '🥤'},
+            {id: '4', name: 'Programming', drink_icon: '🧋'},
           ],
           createdAt: Date.now(),
         };
         const initialProfiles = [defaultProfile];
-        await AsyncStorage.setItem(STORAGE_KEYS.PROFILES, JSON.stringify(initialProfiles));
-        await AsyncStorage.setItem(STORAGE_KEYS.ACTIVE_PROFILE_ID, defaultProfile.id);
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.PROFILES,
+          JSON.stringify(initialProfiles),
+        );
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.ACTIVE_PROFILE_ID,
+          defaultProfile.id,
+        );
         setProfiles(initialProfiles);
         setActiveProfileState(defaultProfile);
       } else {
         setProfiles(savedProfiles);
-        const found = savedProfiles.find(p => p.id === activeId) || savedProfiles[0];
+        const found =
+          savedProfiles.find(p => p.id === activeId) || savedProfiles[0];
         setActiveProfileState(found);
       }
     } catch (error) {
@@ -132,7 +156,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const addSubjectToProfile = async (profileId: string, subject: Subject) => {
     const updated = profiles.map(p => {
       if (p.id !== profileId) return p;
-      return { ...p, subjects: [...p.subjects, subject] };
+      return {...p, subjects: [...p.subjects, subject]};
     });
     await persistProfiles(updated);
     const updatedProfile = updated.find(p => p.id === profileId);
@@ -141,10 +165,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const removeSubjectFromProfile = async (profileId: string, subjectId: string) => {
+  const removeSubjectFromProfile = async (
+    profileId: string,
+    subjectId: string,
+  ) => {
     const updated = profiles.map(p => {
       if (p.id !== profileId) return p;
-      return { ...p, subjects: p.subjects.filter(s => s.id !== subjectId) };
+      return {...p, subjects: p.subjects.filter(s => s.id !== subjectId)};
     });
     await persistProfiles(updated);
     const updatedProfile = updated.find(p => p.id === profileId);
@@ -165,8 +192,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         addSubjectToProfile,
         removeSubjectFromProfile,
         isLoading,
-      }}
-    >
+      }}>
       {children}
     </ProfileContext.Provider>
   );
