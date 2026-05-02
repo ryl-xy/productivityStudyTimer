@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -13,20 +13,34 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useProfile, Profile, Subject } from '../context/profileContext.tsx';
+import {useProfile, Profile, Subject} from '../context/profileContext.tsx';
 
 const AVATAR_OPTIONS = [
-  '🎓', '📚', '🧑‍💻', '👩‍🔬', '👨‍🎨', '🏆', '🌟', '🦁',
-  '🐯', '🦊', '🐸', '🌈', '🚀', '⚡', '🎯', '🔥',
+  '🎓',
+  '📚',
+  '🧑‍💻',
+  '👩‍🔬',
+  '👨‍🎨',
+  '🏆',
+  '🌟',
+  '🦁',
+  '🐯',
+  '🦊',
+  '🐸',
+  '🌈',
+  '🚀',
+  '⚡',
+  '🎯',
+  '🔥',
 ];
 
 const DRINK_ICONS = [
-  { name: '☕', label: 'Coffee' },
-  { name: '🍵', label: 'Tea' },
-  { name: '🥤', label: 'Soda' },
-  { name: '🧋', label: 'Bubble Tea' },
-  { name: '🍶', label: 'Sake' },
-  { name: '🧃', label: 'Juice' },
+  {name: '☕', label: 'Coffee'},
+  {name: '🍵', label: 'Tea'},
+  {name: '🥤', label: 'Soda'},
+  {name: '🧋', label: 'Bubble Tea'},
+  {name: '🍶', label: 'Sake'},
+  {name: '🧃', label: 'Juice'},
 ];
 
 // ─── Create / Edit Profile Modal ──────────────────────────────────────────────
@@ -62,7 +76,9 @@ function ProfileFormModal({
     <Modal visible={visible} transparent animationType="slide">
       <View style={modal.backdrop}>
         <View style={modal.card}>
-          <Text style={modal.title}>{initial ? 'Edit Profile' : 'New Profile'}</Text>
+          <Text style={modal.title}>
+            {initial ? 'Edit Profile' : 'New Profile'}
+          </Text>
 
           <Text style={modal.label}>Name</Text>
           <TextInput
@@ -80,18 +96,21 @@ function ProfileFormModal({
               <TouchableOpacity
                 key={a}
                 style={[modal.avatarBtn, avatar === a && modal.avatarSelected]}
-                onPress={() => setAvatar(a)}
-              >
+                onPress={() => setAvatar(a)}>
                 <Text style={modal.avatarEmoji}>{a}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
           <View style={modal.row}>
-            <TouchableOpacity style={[modal.btn, modal.cancel]} onPress={onCancel}>
+            <TouchableOpacity
+              style={[modal.btn, modal.cancel]}
+              onPress={onCancel}>
               <Text style={modal.btnTxt}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[modal.btn, modal.save]} onPress={handleSave}>
+            <TouchableOpacity
+              style={[modal.btn, modal.save]}
+              onPress={handleSave}>
               <Text style={modal.btnTxt}>Save</Text>
             </TouchableOpacity>
           </View>
@@ -111,10 +130,11 @@ function SubjectsModal({
   profile: Profile | null;
   onClose: () => void;
 }) {
-  const { addSubjectToProfile, removeSubjectFromProfile } = useProfile();
+  const {addSubjectToProfile, removeSubjectFromProfile} = useProfile();
   const [subjectName, setSubjectName] = useState('');
   const [selectedDrink, setSelectedDrink] = useState('☕');
   const [showDrinkPicker, setShowDrinkPicker] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
   if (!profile) return null;
 
@@ -123,23 +143,34 @@ function SubjectsModal({
       Alert.alert('Error', 'Please enter a subject name.');
       return;
     }
-    const newSubject: Subject = {
-      id: Date.now().toString(),
-      name: subjectName.trim(),
-      icon: selectedDrink,
-    };
-    await addSubjectToProfile(profile.id, newSubject);
-    setSubjectName('');
-    setSelectedDrink('☕');
-    setShowDrinkPicker(false);
+
+    setIsAdding(true);
+    try {
+      const newSubject: Subject = {
+        id: 0,
+        name: subjectName.trim(),
+        drink_icon: selectedDrink,
+        color: '#8B4513',
+        profile_id: profile.id,
+      };
+      await addSubjectToProfile(profile.id, newSubject);
+      setSubjectName('');
+      setSelectedDrink('☕');
+      setShowDrinkPicker(false);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to add subject. Please try again.');
+      console.error('Error adding subject:', error);
+    } finally {
+      setIsAdding(false);
+    }
   };
 
-  const handleDelete = (subjectId: string, subjectName: string) => {
+  const handleDelete = (subjectId: string | number, subjectName: string) => {
     Alert.alert(
       'Remove Subject',
       `Remove "${subjectName}" from this profile?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        {text: 'Cancel', style: 'cancel'},
         {
           text: 'Remove',
           style: 'destructive',
@@ -152,18 +183,18 @@ function SubjectsModal({
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={modal.backdrop}>
-        <View style={[modal.card, { maxHeight: '85%' }]}>
+        <View style={[modal.card, {maxHeight: '85%'}]}>
           <Text style={modal.title}>
             {profile.avatar} {profile.name}'s Subjects
           </Text>
 
-          <ScrollView style={{ marginBottom: 12 }}>
+          <ScrollView style={{marginBottom: 12}}>
             {profile.subjects.length === 0 ? (
               <Text style={subj.empty}>No subjects yet. Add one below!</Text>
             ) : (
               profile.subjects.map(s => (
                 <View key={s.id} style={subj.row}>
-                  <Text style={subj.icon}>{s.icon}</Text>
+                  <Text style={subj.icon}>{s.drink_icon}</Text>
                   <Text style={subj.name}>{s.name}</Text>
                   <TouchableOpacity onPress={() => handleDelete(s.id, s.name)}>
                     <Icon name="trash-outline" size={20} color="#c0392b" />
@@ -180,14 +211,13 @@ function SubjectsModal({
             placeholderTextColor="#aaa"
             value={subjectName}
             onChangeText={setSubjectName}
+            editable={!isAdding}
           />
           <TouchableOpacity
             style={subj.drinkSelector}
             onPress={() => setShowDrinkPicker(!showDrinkPicker)}
-          >
-            <Text style={subj.drinkSelectorText}>
-              Icon: {selectedDrink} ▾
-            </Text>
+            disabled={isAdding}>
+            <Text style={subj.drinkSelectorText}>Icon: {selectedDrink} ▾</Text>
           </TouchableOpacity>
           {showDrinkPicker && (
             <View style={subj.drinkGrid}>
@@ -198,8 +228,7 @@ function SubjectsModal({
                   onPress={() => {
                     setSelectedDrink(d.name);
                     setShowDrinkPicker(false);
-                  }}
-                >
+                  }}>
                   <Text style={subj.drinkEmoji}>{d.name}</Text>
                   <Text style={subj.drinkLabel}>{d.label}</Text>
                 </TouchableOpacity>
@@ -208,11 +237,19 @@ function SubjectsModal({
           )}
 
           <View style={modal.row}>
-            <TouchableOpacity style={[modal.btn, modal.cancel]} onPress={onClose}>
+            <TouchableOpacity
+              style={[modal.btn, modal.cancel]}
+              onPress={onClose}
+              disabled={isAdding}>
               <Text style={modal.btnTxt}>Close</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[modal.btn, modal.save]} onPress={handleAdd}>
-              <Text style={modal.btnTxt}>Add Subject</Text>
+            <TouchableOpacity
+              style={[modal.btn, modal.save]}
+              onPress={handleAdd}
+              disabled={isAdding}>
+              <Text style={modal.btnTxt}>
+                {isAdding ? 'Adding...' : 'Add Subject'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -234,7 +271,9 @@ export default function ProfileScreen() {
   } = useProfile();
 
   const [showForm, setShowForm] = useState(false);
-  const [editingProfile, setEditingProfile] = useState<Profile | undefined>(undefined);
+  const [editingProfile, setEditingProfile] = useState<Profile | undefined>(
+    undefined,
+  );
   const [managingProfile, setManagingProfile] = useState<Profile | null>(null);
 
   if (isLoading) {
@@ -247,7 +286,7 @@ export default function ProfileScreen() {
 
   const handleSaveProfile = async (name: string, avatar: string) => {
     if (editingProfile) {
-      await updateProfile({ ...editingProfile, name, avatar });
+      await updateProfile({...editingProfile, name, avatar});
     } else {
       const created = await addProfile(name, avatar);
       // Auto-switch to newly created profile
@@ -271,7 +310,7 @@ export default function ProfileScreen() {
       'Delete Profile',
       `Delete "${profile.name}"? This will also remove all their subjects.`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        {text: 'Cancel', style: 'cancel'},
         {
           text: 'Delete',
           style: 'destructive',
@@ -281,20 +320,20 @@ export default function ProfileScreen() {
     );
   };
 
-  const renderProfile = ({ item }: { item: Profile }) => {
+  const renderProfile = ({item}: {item: Profile}) => {
     const isActive = item.id === activeProfile?.id;
     return (
       <View style={[styles.card, isActive && styles.cardActive]}>
         <TouchableOpacity
           style={styles.cardLeft}
           onPress={() => setActiveProfile(item)}
-          activeOpacity={0.7}
-        >
+          activeOpacity={0.7}>
           <Text style={styles.avatar}>{item.avatar}</Text>
           <View>
             <Text style={styles.profileName}>{item.name}</Text>
             <Text style={styles.subjectCount}>
-              {item.subjects.length} subject{item.subjects.length !== 1 ? 's' : ''}
+              {item.subjects.length} subject
+              {item.subjects.length !== 1 ? 's' : ''}
             </Text>
           </View>
           {isActive && (
@@ -307,14 +346,17 @@ export default function ProfileScreen() {
         <View style={styles.cardActions}>
           <TouchableOpacity
             style={styles.actionBtn}
-            onPress={() => setManagingProfile(item)}
-          >
+            onPress={() => setManagingProfile(item)}>
             <Icon name="book-outline" size={20} color="#8b4513" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} onPress={() => handleEdit(item)}>
+          <TouchableOpacity
+            style={styles.actionBtn}
+            onPress={() => handleEdit(item)}>
             <Icon name="pencil-outline" size={20} color="#8b4513" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} onPress={() => handleDelete(item)}>
+          <TouchableOpacity
+            style={styles.actionBtn}
+            onPress={() => handleDelete(item)}>
             <Icon name="trash-outline" size={20} color="#c0392b" />
           </TouchableOpacity>
         </View>
@@ -326,17 +368,17 @@ export default function ProfileScreen() {
     <ImageBackground
       source={require('../assets/background.jpg')}
       style={styles.bg}
-      blurRadius={2}
-    >
+      blurRadius={2}>
       <View style={styles.overlay}>
         <Text style={styles.title}>👤 Profiles</Text>
         <Text style={styles.subtitle}>
-          Tap a profile to set it as active. Each profile has its own subject list.
+          Tap a profile to set it as active. Each profile has its own subject
+          list.
         </Text>
 
         <FlatList
           data={profiles}
-          keyExtractor={p => p.id}
+          keyExtractor={p => p.id.toString()}
           renderItem={renderProfile}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
@@ -349,8 +391,7 @@ export default function ProfileScreen() {
           onPress={() => {
             setEditingProfile(undefined);
             setShowForm(true);
-          }}
-        >
+          }}>
           <Icon name="add-circle" size={22} color="#fff" />
           <Text style={styles.addBtnText}>New Profile</Text>
         </TouchableOpacity>
@@ -379,7 +420,7 @@ export default function ProfileScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  bg: { flex: 1 },
+  bg: {flex: 1},
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -404,7 +445,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  list: { paddingBottom: 20 },
+  list: {paddingBottom: 20},
   empty: {
     color: '#fff',
     textAlign: 'center',
@@ -549,9 +590,9 @@ const modal = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
   },
-  cancel: { backgroundColor: '#999', marginRight: 8 },
-  save: { backgroundColor: '#8b4513', marginLeft: 8 },
-  btnTxt: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
+  cancel: {backgroundColor: '#999', marginRight: 8},
+  save: {backgroundColor: '#8b4513', marginLeft: 8},
+  btnTxt: {color: '#fff', fontWeight: 'bold', fontSize: 15},
 });
 
 const subj = StyleSheet.create({
@@ -563,8 +604,8 @@ const subj = StyleSheet.create({
     padding: 10,
     marginBottom: 8,
   },
-  icon: { fontSize: 24, marginRight: 10 },
-  name: { flex: 1, fontSize: 16, color: '#333' },
+  icon: {fontSize: 24, marginRight: 10},
+  name: {flex: 1, fontSize: 16, color: '#333'},
   empty: {
     color: '#888',
     textAlign: 'center',
@@ -578,7 +619,7 @@ const subj = StyleSheet.create({
     marginBottom: 10,
     alignItems: 'center',
   },
-  drinkSelectorText: { fontSize: 16, color: '#333' },
+  drinkSelectorText: {fontSize: 16, color: '#333'},
   drinkGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -587,7 +628,7 @@ const subj = StyleSheet.create({
     padding: 8,
     marginBottom: 12,
   },
-  drinkOpt: { width: '33%', alignItems: 'center', padding: 8 },
-  drinkEmoji: { fontSize: 28 },
-  drinkLabel: { fontSize: 11, color: '#666', marginTop: 4 },
+  drinkOpt: {width: '33%', alignItems: 'center', padding: 8},
+  drinkEmoji: {fontSize: 28},
+  drinkLabel: {fontSize: 11, color: '#666', marginTop: 4},
 });

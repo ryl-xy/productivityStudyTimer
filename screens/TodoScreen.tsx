@@ -14,6 +14,7 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import baseUrl from '../API/index';
+import {useProfile} from '../context/profileContext';
 import {AddTaskModal, EditTodoModal} from '../components/TaskModal';
 import {TodoDetailModal} from '../components/TodoDetailModal';
 
@@ -74,6 +75,7 @@ const TodoItem = ({todo, subjectColor, onToggle, onPress}: any) => {
 
 //TodoScreen
 export default function TodoScreen({navigation}: any) {
+  const {activeProfile} = useProfile();
   const [groupedTodos, setGroupedTodos] = useState<any[]>([]);
   const [isFetching, setIsFetching] = useState(false);
   const [addModalVisible, setAddModalVisible] = useState(false);
@@ -81,51 +83,60 @@ export default function TodoScreen({navigation}: any) {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedTodo, setSelectedTodo] = useState<any>(null);
-  const [subjects, setSubjects] = useState<any[]>([]);
 
-  const fetchSubjects = () => {
-    fetch(baseUrl + '/api/subjects')
-      .then(res => res.json())
-      .then(data => {
-        setSubjects(data);
-        mergeSubjectsWithTodos(data);
-      })
-      .catch(console.error);
-  };
+  const fetchSubjectsAndTodos = async () => {
+    if (!activeProfile) {
+      setGroupedTodos([]);
+      return;
+    }
 
-  const mergeSubjectsWithTodos = (subjectsData: any[]) => {
-    fetch(baseUrl + '/api/todos', {
-      method: 'GET',
-      headers: {Accept: 'application/json', 'Content-Type': 'application/json'},
-    })
-      .then(response => response.json())
-      .then(todosData => {
-        const todosMap = new Map();
-        todosData.forEach((group: any) => {
-          todosMap.set(group.subject_id, group);
-        });
+    try {
+      setIsFetching(true);
 
-        const mergedData = subjectsData.map(subject => {
-          if (todosMap.has(subject.id)) {
-            return todosMap.get(subject.id);
-          }
-          return {
-            subject_id: subject.id,
-            subject_name: subject.name,
-            drink_icon: subject.drink_icon,
-            color: subject.color,
-            todos: [],
-          };
-        });
+      // Fetch todos for all subjects in the active profile
+      const response = await fetch(baseUrl + '/api/todos', {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
 
-        setGroupedTodos(mergedData);
-      })
-      .catch(console.error);
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const todosData = await response.json();
+
+      // Map todos by subject_id
+      const todosMap = new Map();
+      (Array.isArray(todosData) ? todosData : []).forEach((group: any) => {
+        todosMap.set(group.subject_id, group);
+      });
+
+      // Build grouped data only for subjects in active profile
+      const mergedData = (activeProfile.subjects || []).map(subject => {
+        if (todosMap.has(subject.id)) {
+          return todosMap.get(subject.id);
+        }
+        return {
+          subject_id: subject.id,
+          subject_name: subject.name,
+          drink_icon: subject.drink_icon,
+          color: subject.color,
+          todos: [],
+        };
+      });
+
+      setGroupedTodos(mergedData);
+    } catch (error) {
+      console.error('Error fetching todos:', error);
+      ToastAndroid.show('Failed to load todos', ToastAndroid.SHORT);
+    } finally {
+      setIsFetching(false);
+    }
   };
 
   useEffect(() => {
-    fetchSubjects();
-  }, []);
+    fetchSubjectsAndTodos();
+  }, [activeProfile]);
 
   const addTodo = (taskDetails: any) => {
     fetch(baseUrl + '/api/todos', {
@@ -137,7 +148,7 @@ export default function TodoScreen({navigation}: any) {
       .then(data => {
         if (data.affected > 0) {
           ToastAndroid.show('Task added!', ToastAndroid.SHORT);
-          fetchSubjects();
+          fetchSubjectsAndTodos();
         }
       })
       .catch(error => console.error('Error:', error));
@@ -153,7 +164,7 @@ export default function TodoScreen({navigation}: any) {
       .then(response => response.json())
       .then(data => {
         if (data.affected > 0) {
-          fetchSubjects();
+          fetchSubjectsAndTodos();
           ToastAndroid.show(
             isCompleted ? 'Task completed!' : 'Task reopened',
             ToastAndroid.SHORT,
@@ -174,7 +185,7 @@ export default function TodoScreen({navigation}: any) {
       .then(data => {
         if (data.affected > 0) {
           ToastAndroid.show('Task updated!', ToastAndroid.SHORT);
-          fetchSubjects();
+          fetchSubjectsAndTodos();
         }
       })
       .catch(console.error);
@@ -189,7 +200,7 @@ export default function TodoScreen({navigation}: any) {
       .then(data => {
         if (data.affected > 0) {
           ToastAndroid.show('Task deleted', ToastAndroid.SHORT);
-          fetchSubjects();
+          fetchSubjectsAndTodos();
           setDetailModalVisible(false);
         }
       })
@@ -258,9 +269,7 @@ export default function TodoScreen({navigation}: any) {
       <FlatList
         refreshing={isFetching}
         onRefresh={() => {
-          setIsFetching(true);
-          fetchSubjects();
-          setIsFetching(false);
+          fetchSubjectsAndTodos();
         }}
         data={groupedTodos}
         renderItem={renderSubject}
@@ -302,7 +311,7 @@ export default function TodoScreen({navigation}: any) {
       <EditTodoModal
         visible={editModalVisible}
         todo={selectedTodo}
-        subjects={subjects}
+        subjects={activeProfile?.subjects || []}
         onClose={() => {
           setEditModalVisible(false);
           setSelectedTodo(null);

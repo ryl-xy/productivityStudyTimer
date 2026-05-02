@@ -178,20 +178,52 @@ app.delete('/api/todos/:id', (req, res) => {
   });
 });
 
-// ============ SUBJECTS API (for dropdown) ============
+// ============ PROFILES API ============
 
-app.get('/api/subjects', (req, res) => {
+// GET all profiles
+app.get('/api/profiles', (req, res) => {
   const db = new sqlite3.Database(DB);
 
-  db.all('SELECT * FROM subjects ORDER BY name', [], (err, rows) => {
+  db.all('SELECT * FROM profiles ORDER BY name', [], (err, rows) => {
     if (err) return res.status(500).json({error: err.message});
     res.json(rows);
     db.close();
   });
 });
 
-app.post('/api/subjects', (req, res) => {
-  const {name, drink_icon, color} = req.body;
+// GET profile with all subjects and todos
+app.get('/api/profiles/:id', (req, res) => {
+  const db = new sqlite3.Database(DB);
+
+  db.get(
+    'SELECT * FROM profiles WHERE id = ?',
+    [req.params.id],
+    (err, profile) => {
+      if (err) return res.status(500).json({error: err.message});
+      if (!profile) {
+        db.close();
+        return res.status(404).json({error: 'Profile not found'});
+      }
+
+      // Get subjects for this profile
+      db.all(
+        'SELECT * FROM subjects WHERE profile_id = ? ORDER BY name',
+        [req.params.id],
+        (err, subjects) => {
+          if (err) return res.status(500).json({error: err.message});
+
+          profile.subjects = subjects || [];
+          res.json(profile);
+          db.close();
+        },
+      );
+    },
+  );
+});
+
+// POST create profile
+app.post('/api/profiles', (req, res) => {
+  const {name, avatar} = req.body;
 
   if (!name) {
     return res.status(400).json({error: 'Name is required'});
@@ -200,19 +232,138 @@ app.post('/api/subjects', (req, res) => {
   const db = new sqlite3.Database(DB);
 
   db.run(
-    `INSERT INTO subjects(name, drink_icon, color) VALUES (?, ?, ?)`,
-    [name, drink_icon, color],
+    `INSERT INTO profiles(name, avatar) VALUES (?, ?)`,
+    [name.trim(), avatar || '🎓'],
     function (err) {
       if (err) return res.status(500).json({error: err.message});
 
       res.status(201).json({
         id: this.lastID,
+        name: name.trim(),
+        avatar: avatar || '🎓',
+        subjects: [],
         affected: this.changes,
       });
 
       db.close();
     },
   );
+});
+
+// PUT update profile
+app.put('/api/profiles/:id', (req, res) => {
+  const {name, avatar} = req.body;
+  const db = new sqlite3.Database(DB);
+
+  db.run(
+    `UPDATE profiles SET name = ?, avatar = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+    [name, avatar, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json({error: err.message});
+
+      res.json({id: req.params.id, affected: this.changes});
+      db.close();
+    },
+  );
+});
+
+// DELETE profile
+app.delete('/api/profiles/:id', (req, res) => {
+  const db = new sqlite3.Database(DB);
+
+  db.run(`DELETE FROM profiles WHERE id = ?`, [req.params.id], function (err) {
+    if (err) return res.status(500).json({error: err.message});
+
+    res.json({id: req.params.id, affected: this.changes});
+    db.close();
+  });
+});
+
+// ============ SUBJECTS API ============
+
+// GET all subjects for a profile
+app.get('/api/profiles/:profileId/subjects', (req, res) => {
+  const db = new sqlite3.Database(DB);
+
+  db.all(
+    'SELECT * FROM subjects WHERE profile_id = ? ORDER BY name',
+    [req.params.profileId],
+    (err, rows) => {
+      if (err) return res.status(500).json({error: err.message});
+      res.json(rows || []);
+      db.close();
+    },
+  );
+});
+
+// GET all subjects
+app.get('/api/subjects', (req, res) => {
+  const db = new sqlite3.Database(DB);
+
+  db.all('SELECT * FROM subjects ORDER BY name', [], (err, rows) => {
+    if (err) return res.status(500).json({error: err.message});
+    res.json(rows || []);
+    db.close();
+  });
+});
+
+// POST create subject
+app.post('/api/subjects', (req, res) => {
+  const {name, drink_icon, color, profile_id} = req.body;
+
+  if (!name || !profile_id) {
+    return res.status(400).json({error: 'Name and profile_id are required'});
+  }
+
+  const db = new sqlite3.Database(DB);
+
+  db.run(
+    `INSERT INTO subjects(name, drink_icon, color, profile_id) VALUES (?, ?, ?, ?)`,
+    [name.trim(), drink_icon || '☕', color || '#8B4513', profile_id],
+    function (err) {
+      if (err) return res.status(500).json({error: err.message});
+
+      res.status(201).json({
+        id: this.lastID,
+        name: name.trim(),
+        drink_icon: drink_icon || '☕',
+        color: color || '#8B4513',
+        profile_id: profile_id,
+        affected: this.changes,
+      });
+
+      db.close();
+    },
+  );
+});
+
+// PUT update subject
+app.put('/api/subjects/:id', (req, res) => {
+  const {name, drink_icon, color} = req.body;
+  const db = new sqlite3.Database(DB);
+
+  db.run(
+    `UPDATE subjects SET name = ?, drink_icon = ?, color = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+    [name, drink_icon, color, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json({error: err.message});
+
+      res.json({id: req.params.id, affected: this.changes});
+      db.close();
+    },
+  );
+});
+
+// DELETE subject
+app.delete('/api/subjects/:id', (req, res) => {
+  const db = new sqlite3.Database(DB);
+
+  db.run(`DELETE FROM subjects WHERE id = ?`, [req.params.id], function (err) {
+    if (err) return res.status(500).json({error: err.message});
+
+    res.json({id: req.params.id, affected: this.changes});
+    db.close();
+  });
 });
 
 const PORT = process.env.PORT || 5000;

@@ -6,46 +6,53 @@ import React, {
   ReactNode,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import baseUrl from '../API/index';
 
-// export interface Subject {
-//   id: string;
-//   name: string;
-//   icon: string;
-// }
 export interface Subject {
-  id: string;
+  id: string | number;
   name: string;
   drink_icon: string;
   color?: string;
+  profile_id?: string | number;
 }
 
 export interface Profile {
-  id: string;
+  id: string | number;
   name: string;
-  avatar: string; // emoji avatar
+  avatar: string;
   subjects: Subject[];
-  createdAt: number;
+  created_at?: string;
 }
 
 interface ProfileContextType {
   profiles: Profile[];
   activeProfile: Profile | null;
-  setActiveProfile: (profile: Profile) => void;
+  setActiveProfile: (profile: Profile) => Promise<void>;
   addProfile: (name: string, avatar: string) => Promise<Profile>;
   updateProfile: (profile: Profile) => Promise<void>;
-  deleteProfile: (profileId: string) => Promise<void>;
-  addSubjectToProfile: (profileId: string, subject: Subject) => Promise<void>;
+  deleteProfile: (profileId: string | number) => Promise<void>;
+  addSubjectToProfile: (
+    profileId: string | number,
+    subject: Subject,
+  ) => Promise<Subject>;
   removeSubjectFromProfile: (
-    profileId: string,
-    subjectId: string,
+    profileId: string | number,
+    subjectId: string | number,
   ) => Promise<void>;
+  refreshProfiles: () => Promise<void>;
   isLoading: boolean;
 }
 
 const STORAGE_KEYS = {
-  PROFILES: 'profiles_data',
   ACTIVE_PROFILE_ID: 'active_profile_id',
 };
+
+const DEFAULT_SUBJECTS = [
+  {name: 'Mathematics', drink_icon: '☕', color: '#FF5733'},
+  {name: 'Science', drink_icon: '🍵', color: '#33FF57'},
+  {name: 'History', drink_icon: '🥤', color: '#3357FF'},
+  {name: 'Programming', drink_icon: '🧋', color: '#FF33F5'},
+];
 
 const ProfileContext = createContext<ProfileContextType | null>(null);
 
@@ -54,129 +61,189 @@ export function ProfileProvider({children}: {children: ReactNode}) {
   const [activeProfile, setActiveProfileState] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load persisted data on mount
+  // Load profiles from API on mount
   useEffect(() => {
-    loadData();
+    loadProfilesFromAPI();
   }, []);
 
-  const loadData = async () => {
+  const loadProfilesFromAPI = async () => {
     try {
-      const [profilesRaw, activeIdRaw] = await AsyncStorage.multiGet([
-        STORAGE_KEYS.PROFILES,
+      setIsLoading(true);
+      const response = await fetch(baseUrl + '/api/profiles');
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const profilesData = await response.json();
+
+      // Fetch subjects for each profile
+      const profilesWithSubjects = await Promise.all(
+        profilesData.map(async (profile: any) => {
+          try {
+            const subjectsRes = await fetch(
+              baseUrl + `/api/profiles/${profile.id}/subjects`,
+            );
+            if (!subjectsRes.ok) throw new Error(`Failed to fetch subjects`);
+            const subjects = await subjectsRes.json();
+            return {...profile, subjects};
+          } catch (error) {
+            console.error(
+              `Error fetching subjects for profile ${profile.id}:`,
+              error,
+            );
+            return {...profile, subjects: []};
+          }
+        }),
+      );
+
+      setProfiles(profilesWithSubjects);
+
+      // Load last active profile ID
+      const activeId = await AsyncStorage.getItem(
         STORAGE_KEYS.ACTIVE_PROFILE_ID,
-      ]);
+      );
+      const active =
+        profilesWithSubjects.find(p => p.id.toString() === activeId) ||
+        profilesWithSubjects[0] ||
+        null;
+      setActiveProfileState(active);
 
-      const savedProfiles: Profile[] = profilesRaw[1]
-        ? JSON.parse(profilesRaw[1])
-        : [];
-      const activeId: string | null = activeIdRaw[1];
-
-      // Seed a default profile if none exist
-      if (savedProfiles.length === 0) {
-        const defaultProfile: Profile = {
-          id: Date.now().toString(),
-          name: 'My Profile',
-          avatar: '🎓',
-          subjects: [
-            {id: '1', name: 'Mathematics', drink_icon: '☕'},
-            {id: '2', name: 'Science', drink_icon: '🍵'},
-            {id: '3', name: 'History', drink_icon: '🥤'},
-            {id: '4', name: 'Programming', drink_icon: '🧋'},
-          ],
-          createdAt: Date.now(),
-        };
-        const initialProfiles = [defaultProfile];
-        await AsyncStorage.setItem(
-          STORAGE_KEYS.PROFILES,
-          JSON.stringify(initialProfiles),
-        );
+      if (active) {
         await AsyncStorage.setItem(
           STORAGE_KEYS.ACTIVE_PROFILE_ID,
-          defaultProfile.id,
+          active.id.toString(),
         );
-        setProfiles(initialProfiles);
-        setActiveProfileState(defaultProfile);
-      } else {
-        setProfiles(savedProfiles);
-        const found =
-          savedProfiles.find(p => p.id === activeId) || savedProfiles[0];
-        setActiveProfileState(found);
       }
     } catch (error) {
-      console.error('Failed to load profiles:', error);
+      console.error('Failed to load profiles from API:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const persistProfiles = async (updated: Profile[]) => {
-    await AsyncStorage.setItem(STORAGE_KEYS.PROFILES, JSON.stringify(updated));
-    setProfiles(updated);
+  const refreshProfiles = async () => {
+    await loadProfilesFromAPI();
   };
 
   const setActiveProfile = async (profile: Profile) => {
     setActiveProfileState(profile);
-    await AsyncStorage.setItem(STORAGE_KEYS.ACTIVE_PROFILE_ID, profile.id);
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.ACTIVE_PROFILE_ID,
+      profile.id.toString(),
+    );
   };
 
   const addProfile = async (name: string, avatar: string): Promise<Profile> => {
-    const newProfile: Profile = {
-      id: Date.now().toString(),
-      name: name.trim(),
-      avatar,
-      subjects: [],
-      createdAt: Date.now(),
-    };
-    const updated = [...profiles, newProfile];
-    await persistProfiles(updated);
-    return newProfile;
+    try {
+      const response = await fetch(baseUrl + '/api/profiles', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name, avatar}),
+      });
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const newProfile = await response.json();
+
+      // Add default subjects to the new profile
+      const subjectsWithDefaults = [];
+      for (const defaultSubject of DEFAULT_SUBJECTS) {
+        try {
+          const subjectRes = await fetch(baseUrl + '/api/subjects', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              name: defaultSubject.name,
+              drink_icon: defaultSubject.drink_icon,
+              color: defaultSubject.color,
+              profile_id: newProfile.id,
+            }),
+          });
+          if (subjectRes.ok) {
+            const subject = await subjectRes.json();
+            subjectsWithDefaults.push(subject);
+          }
+        } catch (err) {
+          console.error(
+            `Failed to add default subject ${defaultSubject.name}:`,
+            err,
+          );
+        }
+      }
+
+      // Reload profiles to get the latest data
+      await loadProfilesFromAPI();
+      return {...newProfile, subjects: subjectsWithDefaults};
+    } catch (error) {
+      console.error('Error adding profile:', error);
+      throw error;
+    }
   };
 
   const updateProfile = async (profile: Profile) => {
-    const updated = profiles.map(p => (p.id === profile.id ? profile : p));
-    await persistProfiles(updated);
-    if (activeProfile?.id === profile.id) {
-      setActiveProfileState(profile);
+    try {
+      const response = await fetch(baseUrl + `/api/profiles/${profile.id}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name: profile.name, avatar: profile.avatar}),
+      });
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      await loadProfilesFromAPI();
+      if (activeProfile?.id === profile.id) {
+        setActiveProfileState(profile);
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      throw error;
     }
   };
 
-  const deleteProfile = async (profileId: string) => {
-    const updated = profiles.filter(p => p.id !== profileId);
-    await persistProfiles(updated);
-    if (activeProfile?.id === profileId) {
-      const next = updated[0] || null;
-      setActiveProfileState(next);
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.ACTIVE_PROFILE_ID,
-        next ? next.id : '',
-      );
+  const deleteProfile = async (profileId: string | number) => {
+    try {
+      const response = await fetch(baseUrl + `/api/profiles/${profileId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      await loadProfilesFromAPI();
+    } catch (error) {
+      console.error('Error deleting profile:', error);
+      throw error;
     }
   };
 
-  const addSubjectToProfile = async (profileId: string, subject: Subject) => {
-    const updated = profiles.map(p => {
-      if (p.id !== profileId) return p;
-      return {...p, subjects: [...p.subjects, subject]};
-    });
-    await persistProfiles(updated);
-    const updatedProfile = updated.find(p => p.id === profileId);
-    if (activeProfile?.id === profileId && updatedProfile) {
-      setActiveProfileState(updatedProfile);
+  const addSubjectToProfile = async (
+    profileId: string | number,
+    subject: Subject,
+  ): Promise<Subject> => {
+    try {
+      const response = await fetch(baseUrl + '/api/subjects', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          name: subject.name,
+          drink_icon: subject.drink_icon,
+          color: subject.color || '#8B4513',
+          profile_id: profileId,
+        }),
+      });
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const newSubject = await response.json();
+      await loadProfilesFromAPI();
+      return newSubject;
+    } catch (error) {
+      console.error('Error adding subject:', error);
+      throw error;
     }
   };
 
   const removeSubjectFromProfile = async (
-    profileId: string,
-    subjectId: string,
+    profileId: string | number,
+    subjectId: string | number,
   ) => {
-    const updated = profiles.map(p => {
-      if (p.id !== profileId) return p;
-      return {...p, subjects: p.subjects.filter(s => s.id !== subjectId)};
-    });
-    await persistProfiles(updated);
-    const updatedProfile = updated.find(p => p.id === profileId);
-    if (activeProfile?.id === profileId && updatedProfile) {
-      setActiveProfileState(updatedProfile);
+    try {
+      const response = await fetch(baseUrl + `/api/subjects/${subjectId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      await loadProfilesFromAPI();
+    } catch (error) {
+      console.error('Error removing subject:', error);
+      throw error;
     }
   };
 
@@ -191,6 +258,7 @@ export function ProfileProvider({children}: {children: ReactNode}) {
         deleteProfile,
         addSubjectToProfile,
         removeSubjectFromProfile,
+        refreshProfiles,
         isLoading,
       }}>
       {children}
@@ -198,8 +266,10 @@ export function ProfileProvider({children}: {children: ReactNode}) {
   );
 }
 
-export function useProfile() {
+export function useProfile(): ProfileContextType {
   const ctx = useContext(ProfileContext);
-  if (!ctx) throw new Error('useProfile must be used inside ProfileProvider');
+  if (!ctx) {
+    throw new Error('useProfile must be used within ProfileProvider');
+  }
   return ctx;
 }

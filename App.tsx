@@ -20,7 +20,7 @@ LogBox.ignoreLogs([
   'Non-serializable values were found in the navigation state',
 ]);
 import ProfileScreen from './screens/ProfileScreen.tsx';
-import { ProfileProvider } from './context/profileContext';
+import {ProfileProvider} from './context/profileContext';
 
 const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
@@ -78,7 +78,7 @@ function MainTabNavigator() {
 
 function RootStackNavigator() {
   return (
-    <RootStack.Navigator screenOptions={{ headerShown: false }}>
+    <RootStack.Navigator screenOptions={{headerShown: false}}>
       <RootStack.Screen name="Main" component={MainTabNavigator} />
       <RootStack.Screen
         name="TimerFlow"
@@ -92,35 +92,22 @@ function RootStackNavigator() {
   );
 }
 
-// function TodoStackNavigator() {
-//   return (
-//     <TodoStack.Navigator screenOptions={{headerShown: true}}>
-//       <TodoStack.Screen
-//         name="TodoList"
-//         component={TodoScreen}
-//         options={{title: 'My Places'}}
-//       />
-//     </TodoStack.Navigator>
-//   );
-// }
-
 export default function App() {
   return (
-    // ProfileProvider wraps everything so any screen can access profiles
     <ProfileProvider>
       <NavigationContainer>
         <Drawer.Navigator
           screenOptions={{
-            drawerStyle: { backgroundColor: '#fff8dc' },
+            drawerStyle: {backgroundColor: '#fff8dc'},
             drawerActiveTintColor: '#8b4513',
-          }}
-        >
+            headerTitle: 'Home',
+          }}>
           <Drawer.Screen
             name="Main"
             component={RootStackNavigator}
             options={{
               drawerLabel: 'Home',
-              drawerIcon: ({ color, size }) => (
+              drawerIcon: ({color, size}) => (
                 <Icon name="home-outline" size={size} color={color} />
               ),
             }}
@@ -130,7 +117,7 @@ export default function App() {
             component={ProfileScreen}
             options={{
               drawerLabel: 'Profiles',
-              drawerIcon: ({ color, size }) => (
+              drawerIcon: ({color, size}) => (
                 <Icon name="person-outline" size={size} color={color} />
               ),
             }}
@@ -138,24 +125,5 @@ export default function App() {
         </Drawer.Navigator>
       </NavigationContainer>
     </ProfileProvider>
-  );
-export default function App() {
-  return (
-    <NavigationContainer>
-      <Drawer.Navigator
-        screenOptions={{
-          drawerStyle: {backgroundColor: '#fff8dc'},
-          drawerActiveTintColor: '#8b4513',
-        }}>
-        <Drawer.Screen name="Home" component={RootStackNavigator} />
-        <Drawer.Screen
-          name="Todo"
-          component={TodoScreen}
-          options={{drawerLabel: 'To Do List'}}
-        />
-
-        {/* add more drawer screens here */}
-      </Drawer.Navigator>
-    </NavigationContainer>
   );
 }

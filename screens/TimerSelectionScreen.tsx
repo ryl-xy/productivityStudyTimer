@@ -9,19 +9,11 @@ import {
   FlatList,
   TextInput,
   Alert,
-  ToastAndroid,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Toast from 'react-native-toast-message';
 import {TimerSelectionScreenProps} from '../types/navigation';
 import {useProfile, Subject} from '../context/profileContext.tsx';
-import baseUrl from '../API/index';
-
-interface Subject {
-  id: string | number;
-  name: string;
-  drink_icon: string;
-  color?: string;
-}
 
 const DRINK_ICONS = [
   {id: '1', name: '☕', label: 'Coffee'},
@@ -30,105 +22,95 @@ const DRINK_ICONS = [
   {id: '4', name: '🧋', label: 'Bubble Tea'},
 ];
 
+const HARDCODED_SUBJECTS = [
+  {
+    name: 'Mathematics',
+    drink_icon: '☕',
+    color: '#FF5733',
+  },
+  {
+    name: 'English',
+    drink_icon: '🍵',
+    color: '#33FF57',
+  },
+  {
+    name: 'Science',
+    drink_icon: '🥤',
+    color: '#3357FF',
+  },
+  {
+    name: 'History',
+    drink_icon: '🧋',
+    color: '#FF33F5',
+  },
+];
+
 export default function TimerSelectionScreen({
   navigation,
 }: TimerSelectionScreenProps) {
-  const {activeProfile, addSubjectToProfile, removeSubjectFromProfile} =
-    useProfile();
+  const {activeProfile, addSubjectToProfile} = useProfile();
 
   const [showAddSubject, setShowAddSubject] = useState(false);
   const [newSubjectName, setNewSubjectName] = useState('');
   const [selectedDrink, setSelectedDrink] = useState('☕');
   const [showDrinkPicker, setShowDrinkPicker] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
 
-  // Fetch subjects from backend
-  const fetchSubjects = () => {
-    fetch(baseUrl + '/api/subjects')
-      .then(res => res.json())
-      .then(data => {
-        setSubjects(data);
-      })
-      .catch(error => {
-        console.error('Error fetching subjects:', error);
-        ToastAndroid.show('Failed to load subjects', ToastAndroid.SHORT);
-      });
-  };
-
-  // Seed database with hardcoded subjects on first load
-  const seedDatabase = () => {
-    HARDCODED_SUBJECTS.forEach(subject => {
-      fetch(baseUrl + '/api/subjects', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(subject),
-      }).catch(error => console.error('Error seeding subject:', error));
-    });
-  };
-
+  // Load subjects from active profile
   useEffect(() => {
-    fetchSubjects();
-    // Attempt to seed database - if subjects already exist, this won't duplicate them
-    // console.log(subjects);
-    // seedDatabase();
-  }, []);
+    if (activeProfile) {
+      setSubjects(activeProfile.subjects || []);
+    }
+  }, [activeProfile]);
 
-  const addSubject = () => {
+  const addSubject = async () => {
     if (!newSubjectName.trim()) {
       Alert.alert('Error', 'Please enter a subject name');
       return;
     }
-    if (!activeProfile) return;
+    if (!activeProfile) {
+      Alert.alert('Error', 'No active profile selected');
+      return;
+    }
 
-    // Generate a random color
-    const colors = [
-      '#FF5733',
-      '#33FF57',
-      '#3357FF',
-      '#FF33F5',
-      '#FFD700',
-      '#FF6B6B',
-    ];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    setIsAdding(true);
+    try {
+      // Generate a random color
+      const colors = [
+        '#FF5733',
+        '#33FF57',
+        '#3357FF',
+        '#FF33F5',
+        '#FFD700',
+        '#FF6B6B',
+      ];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
-    const subjectData = {
-      name: newSubjectName.trim(),
-      drink_icon: selectedDrink,
-      color: randomColor,
-    };
+      const subjectData: Subject = {
+        id: 0,
+        name: newSubjectName.trim(),
+        drink_icon: selectedDrink,
+        color: randomColor,
+      };
 
-    // POST to backend
-    fetch(baseUrl + '/api/subjects', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(subjectData),
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.affected > 0) {
-          ToastAndroid.show('Subject added!', ToastAndroid.SHORT);
-          setNewSubjectName('');
-          setShowAddSubject(false);
-          setSelectedDrink('☕');
-          // Refresh subjects list
-          fetchSubjects();
-        }
-      })
-      .catch(error => {
-        console.error('Error adding subject:', error);
-        ToastAndroid.show('Failed to add subject', ToastAndroid.SHORT);
+      await addSubjectToProfile(activeProfile.id, subjectData);
+
+      Toast.show({
+        type: 'success',
+        text1: 'Subject added!',
+        position: 'bottom',
       });
-  };
 
-  const handleDelete = (subject: Subject) => {
-    if (!activeProfile) return;
-    Alert.alert('Remove Subject', `Remove "${subject.name}"?`, [
-      {text: 'Cancel', style: 'cancel'},
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: () => removeSubjectFromProfile(activeProfile.id, subject.id),
-      },
-    ]);
+      setNewSubjectName('');
+      setShowAddSubject(false);
+      setSelectedDrink('☕');
+    } catch (error) {
+      console.error('Error adding subject:', error);
+      Alert.alert('Error', 'Failed to add subject. Please try again.');
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   const handleTimerSelect = (
@@ -147,11 +129,6 @@ export default function TimerSelectionScreen({
       <View style={styles.subjectInfo}>
         <Text style={styles.subjectIcon}>{item.drink_icon}</Text>
         <Text style={styles.subjectName}>{item.name}</Text>
-        <TouchableOpacity
-          style={styles.deleteSubjectBtn}
-          onPress={() => handleDelete(item)}>
-          <Icon name="close-circle" size={20} color="#c0392b" />
-        </TouchableOpacity>
       </View>
 
       <View style={styles.timerButtons}>
@@ -209,11 +186,13 @@ export default function TimerSelectionScreen({
               placeholderTextColor="#999"
               value={newSubjectName}
               onChangeText={setNewSubjectName}
+              editable={!isAdding}
             />
 
             <TouchableOpacity
               style={styles.drinkSelector}
-              onPress={() => setShowDrinkPicker(!showDrinkPicker)}>
+              onPress={() => setShowDrinkPicker(!showDrinkPicker)}
+              disabled={isAdding}>
               <Text style={styles.selectedDrink}>
                 Choose drink: {selectedDrink}
               </Text>
@@ -243,12 +222,18 @@ export default function TimerSelectionScreen({
                   setShowAddSubject(false);
                   setNewSubjectName('');
                   setSelectedDrink('☕');
-                }}>
+                }}
+                disabled={isAdding}>
                 <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.saveButton} onPress={addSubject}>
-                <Text style={styles.buttonText}>Add Subject</Text>
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={addSubject}
+                disabled={isAdding}>
+                <Text style={styles.buttonText}>
+                  {isAdding ? 'Adding...' : 'Add Subject'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
