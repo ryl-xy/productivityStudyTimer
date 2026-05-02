@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// screens/TimerSelectionScreen.tsx
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -8,82 +9,147 @@ import {
   FlatList,
   TextInput,
   Alert,
+  ToastAndroid,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { TimerSelectionScreenProps } from '../types/navigation';
-import { useProfile, Subject } from '../context/profileContext.tsx';
+import {TimerSelectionScreenProps} from '../types/navigation';
+import {useProfile, Subject} from '../context/profileContext.tsx';
+import baseUrl from '../API/index';
+
+interface Subject {
+  id: string | number;
+  name: string;
+  drink_icon: string;
+  color?: string;
+}
 
 const DRINK_ICONS = [
-  { name: '☕', label: 'Coffee' },
-  { name: '🍵', label: 'Tea' },
-  { name: '🥤', label: 'Soda' },
-  { name: '🧋', label: 'Bubble Tea' },
-  { name: '🍶', label: 'Sake' },
-  { name: '🧃', label: 'Juice' },
+  {id: '1', name: '☕', label: 'Coffee'},
+  {id: '2', name: '🍵', label: 'Tea'},
+  {id: '3', name: '🥤', label: 'Soda'},
+  {id: '4', name: '🧋', label: 'Bubble Tea'},
 ];
 
-export default function TimerSelectionScreen({ navigation }: TimerSelectionScreenProps) {
-  const { activeProfile, addSubjectToProfile, removeSubjectFromProfile } = useProfile();
+export default function TimerSelectionScreen({
+  navigation,
+}: TimerSelectionScreenProps) {
+  const {activeProfile, addSubjectToProfile, removeSubjectFromProfile} =
+    useProfile();
 
   const [showAddSubject, setShowAddSubject] = useState(false);
   const [newSubjectName, setNewSubjectName] = useState('');
   const [selectedDrink, setSelectedDrink] = useState('☕');
   const [showDrinkPicker, setShowDrinkPicker] = useState(false);
 
-  const subjects: Subject[] = activeProfile?.subjects ?? [];
+  // Fetch subjects from backend
+  const fetchSubjects = () => {
+    fetch(baseUrl + '/api/subjects')
+      .then(res => res.json())
+      .then(data => {
+        setSubjects(data);
+      })
+      .catch(error => {
+        console.error('Error fetching subjects:', error);
+        ToastAndroid.show('Failed to load subjects', ToastAndroid.SHORT);
+      });
+  };
 
-  const addSubject = async () => {
+  // Seed database with hardcoded subjects on first load
+  const seedDatabase = () => {
+    HARDCODED_SUBJECTS.forEach(subject => {
+      fetch(baseUrl + '/api/subjects', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(subject),
+      }).catch(error => console.error('Error seeding subject:', error));
+    });
+  };
+
+  useEffect(() => {
+    fetchSubjects();
+    // Attempt to seed database - if subjects already exist, this won't duplicate them
+    // console.log(subjects);
+    // seedDatabase();
+  }, []);
+
+  const addSubject = () => {
     if (!newSubjectName.trim()) {
       Alert.alert('Error', 'Please enter a subject name');
       return;
     }
     if (!activeProfile) return;
 
-    const newSubject: Subject = {
-      id: Date.now().toString(),
+    // Generate a random color
+    const colors = [
+      '#FF5733',
+      '#33FF57',
+      '#3357FF',
+      '#FF33F5',
+      '#FFD700',
+      '#FF6B6B',
+    ];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+    const subjectData = {
       name: newSubjectName.trim(),
-      icon: selectedDrink,
+      drink_icon: selectedDrink,
+      color: randomColor,
     };
 
-    await addSubjectToProfile(activeProfile.id, newSubject);
-    setNewSubjectName('');
-    setShowAddSubject(false);
-    setSelectedDrink('☕');
+    // POST to backend
+    fetch(baseUrl + '/api/subjects', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(subjectData),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.affected > 0) {
+          ToastAndroid.show('Subject added!', ToastAndroid.SHORT);
+          setNewSubjectName('');
+          setShowAddSubject(false);
+          setSelectedDrink('☕');
+          // Refresh subjects list
+          fetchSubjects();
+        }
+      })
+      .catch(error => {
+        console.error('Error adding subject:', error);
+        ToastAndroid.show('Failed to add subject', ToastAndroid.SHORT);
+      });
   };
 
   const handleDelete = (subject: Subject) => {
     if (!activeProfile) return;
-    Alert.alert(
-      'Remove Subject',
-      `Remove "${subject.name}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: () => removeSubjectFromProfile(activeProfile.id, subject.id),
-        },
-      ],
-    );
+    Alert.alert('Remove Subject', `Remove "${subject.name}"?`, [
+      {text: 'Cancel', style: 'cancel'},
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: () => removeSubjectFromProfile(activeProfile.id, subject.id),
+      },
+    ]);
   };
 
-  const handleTimerSelect = (subject: Subject, timerType: 'countup' | 'pomodoro') => {
+  const handleTimerSelect = (
+    subject: Subject,
+    timerType: 'countup' | 'pomodoro',
+  ) => {
     if (timerType === 'countup') {
-      navigation.navigate('CountUpTimer', { subjectName: subject.name });
+      navigation.navigate('CountUpTimer', {subjectName: subject.name});
     } else {
-      navigation.navigate('PomodoroTimer', { subjectName: subject.name });
+      navigation.navigate('PomodoroTimer', {subjectName: subject.name});
     }
   };
 
-  const renderSubject = ({ item }: { item: Subject }) => (
+  const renderSubject = ({item}: {item: Subject}) => (
     <View style={styles.subjectCard}>
       <View style={styles.subjectInfo}>
-        <Text style={styles.subjectIcon}>{item.icon}</Text>
+        <Text style={styles.subjectIcon}>{item.drink_icon}</Text>
         <Text style={styles.subjectName}>{item.name}</Text>
         <TouchableOpacity
           style={styles.deleteSubjectBtn}
-          onPress={() => handleDelete(item)}
-        >
+          onPress={() => handleDelete(item)}>
           <Icon name="close-circle" size={20} color="#c0392b" />
         </TouchableOpacity>
       </View>
@@ -91,15 +157,13 @@ export default function TimerSelectionScreen({ navigation }: TimerSelectionScree
       <View style={styles.timerButtons}>
         <TouchableOpacity
           style={[styles.timerButton, styles.countUpButton]}
-          onPress={() => handleTimerSelect(item, 'countup')}
-        >
+          onPress={() => handleTimerSelect(item, 'countup')}>
           <Text style={styles.timerButtonText}>⏱️ Count Up</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.timerButton, styles.pomodoroButton]}
-          onPress={() => handleTimerSelect(item, 'pomodoro')}
-        >
+          onPress={() => handleTimerSelect(item, 'pomodoro')}>
           <Text style={styles.timerButtonText}>🍅 Pomodoro</Text>
         </TouchableOpacity>
       </View>
@@ -110,13 +174,14 @@ export default function TimerSelectionScreen({ navigation }: TimerSelectionScree
     <ImageBackground
       source={require('../assets/background.jpg')}
       style={styles.background}
-      blurRadius={2}
-    >
+      blurRadius={2}>
       <View style={styles.overlay}>
         {/* Active profile header */}
         {activeProfile && (
           <View style={styles.profileBanner}>
-            <Text style={styles.profileBannerAvatar}>{activeProfile.avatar}</Text>
+            <Text style={styles.profileBannerAvatar}>
+              {activeProfile.avatar}
+            </Text>
             <Text style={styles.profileBannerName}>{activeProfile.name}</Text>
           </View>
         )}
@@ -131,7 +196,7 @@ export default function TimerSelectionScreen({ navigation }: TimerSelectionScree
 
         <FlatList
           data={subjects}
-          keyExtractor={item => item.id}
+          keyExtractor={item => item.id.toString()}
           renderItem={renderSubject}
           contentContainerStyle={styles.listContainer}
         />
@@ -148,8 +213,7 @@ export default function TimerSelectionScreen({ navigation }: TimerSelectionScree
 
             <TouchableOpacity
               style={styles.drinkSelector}
-              onPress={() => setShowDrinkPicker(!showDrinkPicker)}
-            >
+              onPress={() => setShowDrinkPicker(!showDrinkPicker)}>
               <Text style={styles.selectedDrink}>
                 Choose drink: {selectedDrink}
               </Text>
@@ -164,8 +228,7 @@ export default function TimerSelectionScreen({ navigation }: TimerSelectionScree
                     onPress={() => {
                       setSelectedDrink(drink.name);
                       setShowDrinkPicker(false);
-                    }}
-                  >
+                    }}>
                     <Text style={styles.drinkIcon}>{drink.name}</Text>
                     <Text style={styles.drinkLabel}>{drink.label}</Text>
                   </TouchableOpacity>
@@ -180,8 +243,7 @@ export default function TimerSelectionScreen({ navigation }: TimerSelectionScree
                   setShowAddSubject(false);
                   setNewSubjectName('');
                   setSelectedDrink('☕');
-                }}
-              >
+                }}>
                 <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
 
@@ -193,8 +255,7 @@ export default function TimerSelectionScreen({ navigation }: TimerSelectionScree
         ) : (
           <TouchableOpacity
             style={styles.addButton}
-            onPress={() => setShowAddSubject(true)}
-          >
+            onPress={() => setShowAddSubject(true)}>
             <Icon name="add-circle" size={24} color="#FFF" />
             <Text style={styles.addButtonText}>Add New Subject</Text>
           </TouchableOpacity>
@@ -205,7 +266,7 @@ export default function TimerSelectionScreen({ navigation }: TimerSelectionScree
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1 },
+  background: {flex: 1},
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -222,8 +283,8 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     alignSelf: 'flex-start',
   },
-  profileBannerAvatar: { fontSize: 20, marginRight: 8 },
-  profileBannerName: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
+  profileBannerAvatar: {fontSize: 20, marginRight: 8},
+  profileBannerName: {color: '#fff', fontWeight: 'bold', fontSize: 15},
   title: {
     fontSize: 26,
     fontWeight: 'bold',
@@ -238,7 +299,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 20,
   },
-  listContainer: { paddingBottom: 20 },
+  listContainer: {paddingBottom: 20},
   subjectCard: {
     backgroundColor: 'rgba(255, 248, 220, 0.95)',
     borderRadius: 15,
@@ -251,14 +312,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 15,
   },
-  subjectIcon: { fontSize: 36, marginRight: 12 },
+  subjectIcon: {fontSize: 36, marginRight: 12},
   subjectName: {
     flex: 1,
     fontSize: 18,
     fontWeight: 'bold',
     color: '#5C3A21',
   },
-  deleteSubjectBtn: { padding: 4 },
+  deleteSubjectBtn: {padding: 4},
   timerButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -270,9 +331,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: 5,
   },
-  countUpButton: { backgroundColor: '#8B4513' },
-  pomodoroButton: { backgroundColor: '#D2691E' },
-  timerButtonText: { color: '#FFF', fontSize: 14, fontWeight: 'bold' },
+  countUpButton: {backgroundColor: '#8B4513'},
+  pomodoroButton: {backgroundColor: '#D2691E'},
+  timerButtonText: {color: '#FFF', fontSize: 14, fontWeight: 'bold'},
   addButton: {
     backgroundColor: '#8B4513',
     flexDirection: 'row',
@@ -328,8 +389,8 @@ const styles = StyleSheet.create({
     width: '33%',
     padding: 10,
   },
-  drinkIcon: { fontSize: 28 },
-  drinkLabel: { fontSize: 11, color: '#666', marginTop: 4 },
+  drinkIcon: {fontSize: 28},
+  drinkLabel: {fontSize: 11, color: '#666', marginTop: 4},
   formButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -350,5 +411,5 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     alignItems: 'center',
   },
-  buttonText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
+  buttonText: {color: '#FFF', fontWeight: 'bold', fontSize: 16},
 });

@@ -1,5 +1,5 @@
 // screens/CountUpTimerScreen.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   Text,
@@ -8,13 +8,15 @@ import {
   ImageBackground,
   Alert,
 } from 'react-native';
-import { usePersistentTimer } from '../hooks/usePersistentTimer';
-import { CountUpTimerScreenProps } from '../types/navigation';
+import {usePersistentTimer} from '../hooks/usePersistentTimer';
+import {CountUpTimerScreenProps} from '../types/navigation';
 
-
-export default function CountUpTimerScreen({ navigation, route }: CountUpTimerScreenProps) {
-  const { subjectName } = route.params;
-  const { addTime } = usePersistentTimer();
+export default function CountUpTimerScreen({
+  navigation,
+  route,
+}: CountUpTimerScreenProps) {
+  const {subjectName, taskId, taskName} = route.params;
+  const {addTime} = usePersistentTimer();
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -63,28 +65,28 @@ export default function CountUpTimerScreen({ navigation, route }: CountUpTimerSc
     }
 
     const timeSpent = formatTime();
-    
+
     Alert.alert(
       'Great job! 🎉',
       `You studied ${subjectName} for ${timeSpent}`,
       [
-        { 
-          text: 'OK', 
-          onPress: () => navigation.goBack() 
-        }
-      ]
+        {
+          text: 'OK',
+          onPress: () => navigation.goBack(),
+        },
+      ],
     );
   };
 
   return (
-    <ImageBackground 
-      source={require('../assets/background.jpg')} 
-      style={styles.background} 
-      blurRadius={2}
-    >
+    <ImageBackground
+      source={require('../assets/background.jpg')}
+      style={styles.background}
+      blurRadius={2}>
       <View style={styles.overlay}>
-        <Text style={styles.subjectTitle}>📚 {subjectName}</Text>
-        
+        <Text style={styles.subjectTitle}>📚 {taskName || subjectName}</Text>
+        {taskName && <Text style={styles.subjectSubtitle}>{subjectName}</Text>}
+
         <View style={styles.timerCard}>
           <Text style={styles.timerLabel}>Count Up Timer</Text>
           <Text style={styles.timer}>{formatTime()}</Text>
@@ -100,7 +102,7 @@ export default function CountUpTimerScreen({ navigation, route }: CountUpTimerSc
               <Text style={styles.buttonText}>⏸ Pause</Text>
             </TouchableOpacity>
           )}
-          
+
           <TouchableOpacity style={styles.resetButton} onPress={resetTimer}>
             <Text style={styles.buttonText}>⟳ Reset</Text>
           </TouchableOpacity>
@@ -115,7 +117,7 @@ export default function CountUpTimerScreen({ navigation, route }: CountUpTimerSc
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1 },
+  background: {flex: 1},
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -127,7 +129,13 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     color: '#FFF',
-    marginBottom: 30,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  subjectSubtitle: {
+    fontSize: 16,
+    color: '#D4D4D4',
+    marginBottom: 20,
     textAlign: 'center',
   },
   timerCard: {
@@ -139,7 +147,7 @@ const styles = StyleSheet.create({
     width: '100%',
     elevation: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.3,
     shadowRadius: 5,
   },
