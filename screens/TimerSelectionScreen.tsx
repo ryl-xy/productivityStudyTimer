@@ -7,13 +7,13 @@ import {
   TouchableOpacity,
   ImageBackground,
   FlatList,
-  TextInput,
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Toast from 'react-native-toast-message';
 import {TimerSelectionScreenProps} from '../types/navigation';
 import {useProfile, Subject} from '../context/profileContext.tsx';
+import {CustomInput} from '../components/UI.tsx';
 
 const DRINK_ICONS = [
   {id: '1', name: '☕', label: 'Coffee'},
@@ -180,10 +180,8 @@ export default function TimerSelectionScreen({
 
         {showAddSubject ? (
           <View style={styles.addSubjectForm}>
-            <TextInput
-              style={styles.input}
-              placeholder="Subject name"
-              placeholderTextColor="#999"
+            <CustomInput
+              placeholder="Subject Name"
               value={newSubjectName}
               onChangeText={setNewSubjectName}
               editable={!isAdding}
@@ -339,16 +337,6 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 20,
     marginTop: 10,
-  },
-  input: {
-    backgroundColor: '#FFF',
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#DDD',
-    marginBottom: 15,
-    color: '#333',
   },
   drinkSelector: {
     backgroundColor: '#F5F5F5',

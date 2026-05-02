@@ -7,16 +7,16 @@ import {
   TouchableOpacity,
   ToastAndroid,
   Alert,
-  Modal,
-  TextInput,
-  ImageBackground,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import baseUrl from '../API/index';
 import {useProfile} from '../context/profileContext';
-import {AddTaskModal, EditTodoModal} from '../components/TaskModal';
-import {TodoDetailModal} from '../components/TodoDetailModal';
+import {
+  AddTaskModal,
+  EditTodoModal,
+  TodoDetailModal,
+} from '../components/TaskModal';
 
 const TodoItem = ({todo, subjectColor, onToggle, onPress}: any) => {
   const getPriorityColor = () => {

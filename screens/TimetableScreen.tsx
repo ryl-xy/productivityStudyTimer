@@ -51,7 +51,7 @@ interface Schedule {
   location: string;
   day: DayOfWeek;
   startTime: string; // "HH:MM"
-  endTime: string;   // "HH:MM"
+  endTime: string; // "HH:MM"
   color: string;
   note: string;
 }
@@ -131,7 +131,20 @@ function TimePickerModal({
   const hours = Array.from({length: 24}, (_, i) =>
     i.toString().padStart(2, '0'),
   );
-  const minutes = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'];
+  const minutes = [
+    '00',
+    '05',
+    '10',
+    '15',
+    '20',
+    '25',
+    '30',
+    '35',
+    '40',
+    '45',
+    '50',
+    '55',
+  ];
 
   return (
     <Modal visible={visible} transparent animationType="fade">
@@ -142,7 +155,9 @@ function TimePickerModal({
             {/* Hour */}
             <View style={tp.col}>
               <Text style={tp.colLabel}>Hour</Text>
-              <ScrollView style={tp.scroll} showsVerticalScrollIndicator={false}>
+              <ScrollView
+                style={tp.scroll}
+                showsVerticalScrollIndicator={false}>
                 {hours.map(h => (
                   <TouchableOpacity
                     key={h}
@@ -160,14 +175,19 @@ function TimePickerModal({
             {/* Minute */}
             <View style={tp.col}>
               <Text style={tp.colLabel}>Min</Text>
-              <ScrollView style={tp.scroll} showsVerticalScrollIndicator={false}>
+              <ScrollView
+                style={tp.scroll}
+                showsVerticalScrollIndicator={false}>
                 {minutes.map(m => (
                   <TouchableOpacity
                     key={m}
                     style={[tp.item, minute === m && tp.itemSelected]}
                     onPress={() => setMinute(m)}>
                     <Text
-                      style={[tp.itemText, minute === m && tp.itemTextSelected]}>
+                      style={[
+                        tp.itemText,
+                        minute === m && tp.itemTextSelected,
+                      ]}>
                       {m}
                     </Text>
                   </TouchableOpacity>
@@ -277,7 +297,10 @@ function ScheduleFormModal({
 
             {/* Day */}
             <Text style={fm.label}>Day</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={fm.dayRow}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={fm.dayRow}>
               {DAYS.map(d => (
                 <TouchableOpacity
                   key={d}
@@ -352,9 +375,7 @@ function ScheduleFormModal({
       {/* Time Picker */}
       <TimePickerModal
         visible={timePickerTarget !== null}
-        value={
-          timePickerTarget === 'start' ? form.startTime : form.endTime
-        }
+        value={timePickerTarget === 'start' ? form.startTime : form.endTime}
         onConfirm={t => {
           if (timePickerTarget === 'start') {
             setForm(f => ({...f, startTime: t}));
@@ -418,9 +439,7 @@ export default function TimetableScreen() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>(today());
   const [modalVisible, setModalVisible] = useState(false);
-  const [editTarget, setEditTarget] = useState<Schedule | undefined>(
-    undefined,
-  );
+  const [editTarget, setEditTarget] = useState<Schedule | undefined>(undefined);
 
   // Load from storage
   useEffect(() => {
@@ -463,9 +482,7 @@ export default function TimetableScreen() {
   // Schedules for selected day, sorted by start time
   const daySchedules = schedules
     .filter(s => s.day === selectedDay)
-    .sort(
-      (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime),
-    );
+    .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
 
   return (
     <View style={styles.screen}>
@@ -473,7 +490,10 @@ export default function TimetableScreen() {
 
       {/* Day Tabs */}
       <View style={styles.dayBar}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dayBarContent}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.dayBarContent}>
           {DAYS.map(d => {
             const isToday = d === today();
             const isSelected = d === selectedDay;
@@ -493,10 +513,7 @@ export default function TimetableScreen() {
                 {isToday && <View style={styles.todayDot} />}
                 {count > 0 && (
                   <View
-                    style={[
-                      styles.badge,
-                      isSelected && styles.badgeActive,
-                    ]}>
+                    style={[styles.badge, isSelected && styles.badgeActive]}>
                     <Text
                       style={[
                         styles.badgeText,
@@ -523,7 +540,9 @@ export default function TimetableScreen() {
         <Text style={styles.dayCount}>
           {daySchedules.length === 0
             ? 'No classes'
-            : `${daySchedules.length} class${daySchedules.length > 1 ? 'es' : ''}`}
+            : `${daySchedules.length} class${
+                daySchedules.length > 1 ? 'es' : ''
+              }`}
         </Text>
       </View>
 
@@ -531,7 +550,9 @@ export default function TimetableScreen() {
       {daySchedules.length === 0 ? (
         <View style={styles.empty}>
           <Text style={styles.emptyIcon}>📅</Text>
-          <Text style={styles.emptyTitle}>No schedules for {DAY_SHORT[selectedDay]}</Text>
+          <Text style={styles.emptyTitle}>
+            No schedules for {DAY_SHORT[selectedDay]}
+          </Text>
           <Text style={styles.emptySubtitle}>
             Tap the + button to add a class or event.
           </Text>

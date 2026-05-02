@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  TextInput,
   Alert,
   ImageBackground,
   ScrollView,
@@ -14,6 +13,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useProfile, Profile, Subject} from '../context/profileContext.tsx';
+import {CustomInput} from '../components/UI.tsx';
 
 const AVATAR_OPTIONS = [
   '🎓',
@@ -58,7 +58,7 @@ function ProfileFormModal({
   const [name, setName] = useState(initial?.name ?? '');
   const [avatar, setAvatar] = useState(initial?.avatar ?? '🎓');
 
-  // reset when modal opens/initial changes
+  // reset when modal opens
   React.useEffect(() => {
     setName(initial?.name ?? '');
     setAvatar(initial?.avatar ?? '🎓');
@@ -79,17 +79,14 @@ function ProfileFormModal({
           <Text style={modal.title}>
             {initial ? 'Edit Profile' : 'New Profile'}
           </Text>
-
           <Text style={modal.label}>Name</Text>
-          <TextInput
-            style={modal.input}
+          \
+          <CustomInput
             placeholder="e.g. Alice"
-            placeholderTextColor="#aaa"
             value={name}
             onChangeText={setName}
             maxLength={30}
           />
-
           <Text style={modal.label}>Pick an Avatar</Text>
           <View style={modal.avatarGrid}>
             {AVATAR_OPTIONS.map(a => (
@@ -101,7 +98,6 @@ function ProfileFormModal({
               </TouchableOpacity>
             ))}
           </View>
-
           <View style={modal.row}>
             <TouchableOpacity
               style={[modal.btn, modal.cancel]}
@@ -205,10 +201,8 @@ function SubjectsModal({
           </ScrollView>
 
           {/* Add subject form */}
-          <TextInput
-            style={modal.input}
-            placeholder="New subject name"
-            placeholderTextColor="#aaa"
+          <CustomInput
+            placeholder="New Subject Name"
             value={subjectName}
             onChangeText={setSubjectName}
             editable={!isAdding}
@@ -548,16 +542,6 @@ const modal = StyleSheet.create({
     fontWeight: '600',
     color: '#8b4513',
     marginBottom: 8,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    marginBottom: 16,
-    color: '#333',
   },
   avatarGrid: {
     flexDirection: 'row',
