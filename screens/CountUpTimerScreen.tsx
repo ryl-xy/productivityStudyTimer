@@ -152,13 +152,13 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
   },
   timerLabel: {
-    fontSize: 18,
+    fontSize: 15,
     color: '#8B4513',
     marginBottom: 10,
     fontWeight: '600',
   },
   timer: {
-    fontSize: 64,
+    fontSize: 50,
     fontFamily: 'monospace',
     color: '#8B4513',
     fontWeight: 'bold',

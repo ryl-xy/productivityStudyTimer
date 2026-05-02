@@ -325,10 +325,10 @@ export default function TodoScreen({navigation}: any) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#c6c8ca',
+    backgroundColor: '#fdf6e3',
   },
   list: {
-    padding: 12,
+    padding: 14,
     paddingBottom: 80,
   },
   subjectSection: {
@@ -338,13 +338,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#fff8dc',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: 14,
     marginBottom: 8,
-    borderLeftWidth: 4,
+    borderLeftWidth: 5,
     elevation: 2,
+    shadowColor: '#8b4513',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
   subjectInfo: {
     flexDirection: 'row',
@@ -357,7 +361,7 @@ const styles = StyleSheet.create({
   subjectName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1E293B',
+    color: '#5c2d0a',
   },
   addTaskBtn: {
     flexDirection: 'row',
@@ -375,11 +379,18 @@ const styles = StyleSheet.create({
   todoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: '#fffdf5',
     padding: 12,
-    marginHorizontal: 8,
+    marginHorizontal: 6,
     marginVertical: 4,
-    borderRadius: 10,
+    borderRadius: 12,
+    elevation: 1,
+    shadowColor: '#8b4513',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.07,
+    shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: '#f0dbb8',
   },
   checkbox: {
     marginRight: 12,
@@ -390,11 +401,11 @@ const styles = StyleSheet.create({
   todoTitle: {
     fontSize: 15,
     fontWeight: '500',
-    color: '#1E293B',
+    color: '#3d1f05',
   },
   completedTitle: {
     textDecorationLine: 'line-through',
-    color: '#b8c1cf',
+    color: '#c4a882',
   },
   priorityText: {
     color: 'white',
@@ -403,18 +414,20 @@ const styles = StyleSheet.create({
   },
   dueDate: {
     fontSize: 11,
-    color: '#64748B',
+    color: '#a07850',
     marginTop: 2,
   },
   emptyState: {
-    backgroundColor: 'white',
-    marginHorizontal: 8,
+    backgroundColor: '#fff8dc',
+    marginHorizontal: 6,
     padding: 20,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#f0dbb8',
   },
   emptyStateText: {
-    color: '#94A3B8',
+    color: '#c4a882',
     fontSize: 13,
   },
 });

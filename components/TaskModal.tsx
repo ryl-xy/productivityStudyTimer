@@ -77,7 +77,7 @@ const AddTaskModal = ({visible, subject, onClose, onAdd}: any) => {
                     priority === p && styles.priorityOptionSelected,
                   ]}
                   onPress={() => setPriority(p)}>
-                  <Text style={{fontSize: 12, fontWeight: '600'}}>
+                  <Text style={{fontSize: 12, fontWeight: '600', color: priority === p ? '#fff' : '#8b4513'}}>
                     {p === 'no'
                       ? 'None'
                       : p === 'low'
@@ -227,37 +227,45 @@ const EditTodoModal = ({visible, todo, subjects, onClose, onSave}: any) => {
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   addModal: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 20,
-    width: '85%',
+    backgroundColor: '#fff8dc',
+    borderRadius: 20,
+    padding: 22,
+    width: '88%',
     borderTopWidth: 5,
+    elevation: 6,
+    shadowColor: '#8b4513',
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
   },
   addModalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 17,
+    fontWeight: '700',
     marginBottom: 16,
     textAlign: 'center',
+    color: '#5c2d0a',
   },
   taskInput: {
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#e8d5b0',
     borderRadius: 10,
     padding: 12,
-    fontSize: 16,
-    marginBottom: 16,
+    fontSize: 15,
+    marginBottom: 14,
+    backgroundColor: '#fffdf5',
+    color: '#3d1f05',
   },
   textArea: {
     minHeight: 80,
     textAlignVertical: 'top',
   },
   priorityContainer: {
-    marginBottom: 16,
+    marginBottom: 14,
   },
   priorityOptions: {
     flexDirection: 'row',
@@ -266,76 +274,85 @@ const styles = StyleSheet.create({
   priorityOption: {
     flex: 1,
     padding: 10,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#f5e8c8',
     borderRadius: 8,
     alignItems: 'center',
   },
   priorityOptionSelected: {
-    backgroundColor: '#DBEAFE',
+    backgroundColor: '#8b4513',
   },
   pickerLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#64748B',
+    color: '#8b4513',
     marginBottom: 8,
   },
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 12,
+    marginTop: 4,
   },
   cancelBtn: {
     flex: 1,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: '#e8d5b0',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
   },
   cancelBtnText: {
-    color: '#64748B',
+    color: '#8b4513',
     fontWeight: '600',
   },
   addBtn: {
     flex: 1,
-    backgroundColor: '#8B4513',
+    backgroundColor: '#8b4513',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
   },
   addBtnText: {
-    color: 'white',
+    color: '#fff',
     fontWeight: '600',
   },
   editModal: {
-    backgroundColor: 'white',
+    backgroundColor: '#fff8dc',
     borderRadius: 20,
-    padding: 20,
+    padding: 22,
     width: '90%',
     maxHeight: '90%',
+    elevation: 6,
+    shadowColor: '#8b4513',
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
   },
   editModalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 19,
+    fontWeight: '700',
     marginBottom: 16,
     textAlign: 'center',
+    color: '#5c2d0a',
   },
   editInput: {
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#e8d5b0',
     borderRadius: 10,
     padding: 12,
-    fontSize: 16,
+    fontSize: 15,
     marginBottom: 12,
+    backgroundColor: '#fffdf5',
+    color: '#3d1f05',
   },
   saveBtn: {
     flex: 1,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#8b4513',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
   },
   saveBtnText: {
-    color: 'white',
+    color: '#fff',
     fontWeight: '600',
   },
   pickerContainer: {
@@ -343,12 +360,12 @@ const styles = StyleSheet.create({
   },
   subjectOption: {
     padding: 10,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#f5e8c8',
     borderRadius: 8,
     marginBottom: 4,
   },
   subjectOptionSelected: {
-    backgroundColor: '#DBEAFE',
+    backgroundColor: '#d2a679',
   },
 });
 
