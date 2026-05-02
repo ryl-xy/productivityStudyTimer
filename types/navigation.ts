@@ -1,7 +1,6 @@
 import {StackNavigationProp} from '@react-navigation/stack';
 import {NavigatorScreenParams, RouteProp} from '@react-navigation/native';
 
-// ─── Stack param lists ────────────────────────────────────────────────────────
 export type TimerStackParamList = {
   TimerSelection: undefined;
   CountUpTimer: {subjectName: string; taskId?: number; taskName?: string};
@@ -9,7 +8,7 @@ export type TimerStackParamList = {
 };
 
 export type RootStackParamList = {
-  Main: undefined; // HomeScreen inside HomeStackNavigator
+  Main: undefined;
   TimerFlow: NavigatorScreenParams<TimerStackParamList>;
 };
 
@@ -17,51 +16,21 @@ export type TodoStackParamList = {
   TodoList: undefined;
 };
 
-// ─── Drawer param list ────────────────────────────────────────────────────────
-export type DrawerParamList = {
-  HomeMain: NavigatorScreenParams<RootStackParamList>;
+export type MainTabParamList = {
+  Home: NavigatorScreenParams<RootStackParamList>;
+  Todo: undefined;
   Profiles: undefined;
 };
 
-// ─── Tab param list ───────────────────────────────────────────────────────────
-export type MainTabParamList = {
-  HomeTab: NavigatorScreenParams<DrawerParamList>;
-  TodoTab: undefined;
-};
+export type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Main'>;
+export type TimerSelectionScreenNavigationProp = StackNavigationProp<TimerStackParamList, 'TimerSelection'>;
+export type CountUpTimerScreenNavigationProp = StackNavigationProp<TimerStackParamList, 'CountUpTimer'>;
+export type PomodoroTimerScreenNavigationProp = StackNavigationProp<TimerStackParamList, 'PomodoroTimer'>;
+export type TodoScreenNavigationProp = StackNavigationProp<TodoStackParamList, 'TodoList'>;
 
-// ─── Navigation prop types ────────────────────────────────────────────────────
-export type HomeScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  'Main'
->;
-export type TimerSelectionScreenNavigationProp = StackNavigationProp<
-  TimerStackParamList,
-  'TimerSelection'
->;
-export type CountUpTimerScreenNavigationProp = StackNavigationProp<
-  TimerStackParamList,
-  'CountUpTimer'
->;
-export type PomodoroTimerScreenNavigationProp = StackNavigationProp<
-  TimerStackParamList,
-  'PomodoroTimer'
->;
-export type TodoScreenNavigationProp = StackNavigationProp<
-  TodoStackParamList,
-  'TodoList'
->;
+export type CountUpTimerScreenRouteProp = RouteProp<TimerStackParamList, 'CountUpTimer'>;
+export type PomodoroTimerScreenRouteProp = RouteProp<TimerStackParamList, 'PomodoroTimer'>;
 
-// ─── Route prop types ─────────────────────────────────────────────────────────
-export type CountUpTimerScreenRouteProp = RouteProp<
-  TimerStackParamList,
-  'CountUpTimer'
->;
-export type PomodoroTimerScreenRouteProp = RouteProp<
-  TimerStackParamList,
-  'PomodoroTimer'
->;
-
-// ─── Combined prop types ──────────────────────────────────────────────────────
 export type CountUpTimerScreenProps = {
   navigation: CountUpTimerScreenNavigationProp;
   route: CountUpTimerScreenRouteProp;
