@@ -15,6 +15,7 @@ import CountUpTimerScreen from './screens/CountUpTimerScreen';
 import PomodoroTimerScreen from './screens/PomodoroTimerScreen';
 import TodoScreen from './screens/TodoScreen';
 import ProfileScreen from './screens/ProfileScreen.tsx';
+import TimetableScreen from './screens/TimetableScreen';
 import {ProfileProvider} from './context/profileContext';
 import {LogBox} from 'react-native';
 
@@ -63,6 +64,8 @@ export default function App() {
                 iconName = focused ? 'home' : 'home-outline';
               } else if (route.name === 'Todo') {
                 iconName = focused ? 'checkbox' : 'checkbox-outline';
+              } else if (route.name === 'Timetable') {
+                iconName = focused ? 'calendar' : 'calendar-outline';
               } else if (route.name === 'Profiles') {
                 iconName = focused ? 'person' : 'person-outline';
               } else {
@@ -86,6 +89,17 @@ export default function App() {
               tabBarLabel: 'To Do List',
               headerShown: true,
               headerTitle: 'To Do List',
+              headerStyle: {backgroundColor: '#fff8dc'},
+              headerTintColor: '#8b4513',
+            }}
+          />
+          <Tab.Screen
+            name="Timetable"
+            component={TimetableScreen}
+            options={{
+              tabBarLabel: 'Timetable',
+              headerShown: true,
+              headerTitle: 'Timetable',
               headerStyle: {backgroundColor: '#fff8dc'},
               headerTintColor: '#8b4513',
             }}

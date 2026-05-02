@@ -19,6 +19,7 @@ export type TodoStackParamList = {
 export type MainTabParamList = {
   Home: NavigatorScreenParams<RootStackParamList>;
   Todo: undefined;
+  Timetable: undefined;
   Profiles: undefined;
 };
 
