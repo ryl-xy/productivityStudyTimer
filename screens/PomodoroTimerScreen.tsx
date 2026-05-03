@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-import React, { useState, useEffect, useRef } from 'react';
-=======
 // screens/PomodoroTimerScreen.tsx
 import React, {useState, useEffect, useRef} from 'react';
->>>>>>> ef48d88d3dd415d43c22a4b056c3279bad464b02
 import {
   View,
   Text,
@@ -16,28 +12,19 @@ import {
 import {PomodoroTimerScreenProps} from '../types/navigation';
 import {usePersistentTimer} from '../hooks/usePersistentTimer';
 
-<<<<<<< HEAD
-export default function PomodoroTimerScreen({ navigation, route }: PomodoroTimerScreenProps) {
-  const { subjectName } = route.params;
-  const { addTime } = usePersistentTimer();
-=======
 export default function PomodoroTimerScreen({
   navigation,
   route,
 }: PomodoroTimerScreenProps) {
   const {subjectName} = route.params;
   const {addTime} = usePersistentTimer(); // Get the addTime function
->>>>>>> ef48d88d3dd415d43c22a4b056c3279bad464b02
   const [time, setTime] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [sessionType, setSessionType] = useState<'work' | 'break'>('work');
   const [sessionCount, setSessionCount] = useState(1);
   const [completedSessions, setCompletedSessions] = useState(0);
   const [totalStudyTime, setTotalStudyTime] = useState(0);
-<<<<<<< HEAD
-=======
   // const intervalRef = useRef<NodeJS.Timeout | null>(null);
->>>>>>> ef48d88d3dd415d43c22a4b056c3279bad464b02
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const WORK_DURATION = 25 * 60;
