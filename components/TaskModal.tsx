@@ -11,7 +11,7 @@ import {
   TextInput,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {CustomInput, PrioritySelector} from './UI';
+import {CustomInput, PrioritySelector, DatePickerInput} from './UI';
 
 const AddTaskModal = ({visible, subject, onClose, onAdd}: any) => {
   const [title, setTitle] = useState('');
@@ -66,10 +66,10 @@ const AddTaskModal = ({visible, subject, onClose, onAdd}: any) => {
 
           <PrioritySelector priority={priority} setPriority={setPriority} />
 
-          <CustomInput
-            placeholder="Due date (YYYY-MM-DD)"
+          <DatePickerInput
             value={dueDate}
-            onChangeText={setDueDate}
+            onChange={(date: string) => setDueDate(date)}
+            placeholder="Select Due Date"
           />
           <View style={styles.modalButtons}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>

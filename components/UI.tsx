@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,56 @@ import {
   TextInput,
   StyleSheet,
 } from 'react-native';
+import DatePicker from 'react-native-date-picker';
+import Icon from 'react-native-vector-icons/Ionicons';
+
+const DatePickerInput = ({value, onChange, placeholder}: any) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      {/* Input Box */}
+      <TouchableOpacity onPress={() => setOpen(true)}>
+        <View style={DatePickerInputstyles.input}>
+          <Text style={{color: value ? '#3d1f05' : '#999'}}>
+            {value
+              ? new Date(value).toISOString().split('T')[0]
+              : placeholder || 'Select Date'}
+          </Text>
+          <Icon name="calendar-outline" size={18} color="#8b4513" />
+        </View>
+      </TouchableOpacity>
+
+      <DatePicker
+        modal
+        open={open}
+        date={value ? new Date(value) : new Date()}
+        mode="date"
+        onConfirm={date => {
+          setOpen(false);
+          onChange(date.toISOString());
+        }}
+        onCancel={() => {
+          setOpen(false);
+        }}
+      />
+    </>
+  );
+};
+
+const DatePickerInputstyles = StyleSheet.create({
+  input: {
+    borderWidth: 1,
+    borderColor: '#e8d5b0',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 14,
+    backgroundColor: '#fffdf5',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+});
 
 const CustomInput = (props: any) => {
   return (
@@ -75,4 +125,4 @@ const Prioritystyles = StyleSheet.create({
   },
 });
 
-export {PrioritySelector, CustomInput};
+export {PrioritySelector, CustomInput, DatePickerInput};
