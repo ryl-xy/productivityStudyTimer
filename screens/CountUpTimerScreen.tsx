@@ -11,6 +11,7 @@ import {
 import {usePersistentTimer} from '../hooks/usePersistentTimer';
 import {CountUpTimerScreenProps} from '../types/navigation';
 import { useStudy } from '../context/studyContext.tsx'; 
+import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function CountUpTimerScreen({
   navigation,
@@ -18,6 +19,7 @@ export default function CountUpTimerScreen({
 }: CountUpTimerScreenProps) {
   const {subjectName, taskId, taskName} = route.params;
   const {addTime} = usePersistentTimer();
+  const {addStudySession} = useStudy(); // Get the addStudySession and formatTime functions from context
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -59,29 +61,33 @@ export default function CountUpTimerScreen({
   };
 
   const finishStudy = async () => {
-    const {addStudySession} = useStudy(); // Get the addStudySession and formatTime functions from context
-    pauseTimer();
+    try {
+      pauseTimer();
 
-    if (seconds > 0) {
-      addTime(seconds);
+      if (seconds > 0) {
+        await addTime(seconds);
 
-      const minutes = Math.floor(seconds / 60);
-      await addStudySession(0, subjectName, minutes, 'count-up');
-    }
+        const minutes = Math.floor(seconds / 60);
+        await addStudySession(0, subjectName, minutes, 'count-up');
+      }
 
-    const timeSpent = formatTime();
+      const timeSpent = formatTime();
 
-    Alert.alert(
-      'Great job! 🎉',
-      `You studied ${subjectName} for ${timeSpent}`,
-      [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ],
-    );
-  };
+      Alert.alert(
+        'Great job! 🎉',
+        `You studied ${subjectName} for ${timeSpent}`,
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ],
+      );
+    } catch (error){
+      console.error('Error finishing study session:', error);
+      Alert.alert('Error', 'Failed to save study session. Please try again.');
+    };
+  }
 
   return (
     <ImageBackground
@@ -89,6 +95,24 @@ export default function CountUpTimerScreen({
       style={styles.background}
       blurRadius={2}>
       <View style={styles.overlay}>
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => {
+            if (isRunning) {
+              Alert.alert(
+                'Exit Timer?',
+                'Your current session is in progress. Progress will be lost if you exit.',
+                [
+                  {text: 'Cancel', style: 'cancel'},
+                  {text: 'Exit', onPress: () => navigation.goBack()},
+                ],
+              );
+            } else {
+              navigation.goBack();
+            }
+          }}>
+          <Text style={styles.closeButtonText}>✕</Text>
+        </TouchableOpacity>
         <Text style={styles.subjectTitle}>📚 {taskName || subjectName}</Text>
         {taskName && <Text style={styles.subjectSubtitle}>{subjectName}</Text>}
 
@@ -129,6 +153,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
+  },
+    closeButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  closeButtonText: {
+    color: '#FFF',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   subjectTitle: {
     fontSize: 32,

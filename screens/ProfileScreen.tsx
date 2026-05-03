@@ -13,8 +13,8 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useProfile, Profile, Subject} from '../context/profileContext.tsx';
-import {CustomInput} from '../components/UI.tsx';
 import { useStudy } from '../context/studyContext.tsx';
+import {CustomInput} from '../components/UI.tsx';
 
 const AVATAR_OPTIONS = [
   '🎓',
@@ -116,8 +116,7 @@ function ProfileFormModal({
     </Modal>
   );
 }
-
-// ─── Manage Subjects Modal ─────────────────────────────────────────────────────
+// ─── View Subjects Modal (Read-Only) ────────────────────────────────────────
 function SubjectsModal({
   visible,
   profile,
@@ -127,16 +126,11 @@ function SubjectsModal({
   profile: Profile | null;
   onClose: () => void;
 }) {
-  const {addSubjectToProfile, removeSubjectFromProfile} = useProfile();
   const {getSubjectStudyTime, formatTime} = useStudy();
-  const [subjectName, setSubjectName] = useState('');
-  const [selectedDrink, setSelectedDrink] = useState('☕');
-  const [showDrinkPicker, setShowDrinkPicker] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
   const [subjectHours, setSubjectHours] = useState<{ [key: string]: number }>({});
 
-   React.useEffect(() => {
-    if(visible && profile) {
+  React.useEffect(() => {
+    if (visible && profile) {
       loadSubjectHours();
     }
   }, [visible, profile]);
@@ -156,55 +150,6 @@ function SubjectsModal({
     setSubjectHours(hours);
   };
 
-  const handleAdd = async () => {
-    if (!profile) {
-      Alert.alert('Error', 'No active profile selected.');
-      return;
-    }
-
-    if (!subjectName.trim()) {
-      Alert.alert('Error', 'Please enter a subject name.');
-      return;
-    }
-
-    setIsAdding(true);
-    try {
-      const newSubject: Subject = {
-        id: 0,
-        name: subjectName.trim(),
-        drink_icon: selectedDrink,
-        color: '#8B4513',
-        profile_id: profile.id,
-      };
-      await addSubjectToProfile(profile.id, newSubject);
-      setSubjectName('');
-      setSelectedDrink('☕');
-      setShowDrinkPicker(false);
-      await loadSubjectHours();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to add subject. Please try again.');
-      console.error('Error adding subject:', error);
-    } finally {
-      setIsAdding(false);
-    }
-  };
-
-  const handleDelete = (subjectId: string | number, subjectName: string) => {
-    if (!profile) return;
-    Alert.alert(
-      'Remove Subject',
-      `Remove "${subjectName}" from this profile?`,
-      [
-        {text: 'Cancel', style: 'cancel'},
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: () => removeSubjectFromProfile(profile.id, subjectId),
-        },
-      ],
-    );
-  };
-
   if (!profile) return null;
 
   return (
@@ -217,67 +162,25 @@ function SubjectsModal({
 
           <ScrollView style={{marginBottom: 12}}>
             {profile.subjects.length === 0 ? (
-              <Text style={subj.empty}>No subjects yet. Add one below!</Text>
+              <Text style={subj.empty}>No subjects assigned.</Text>
             ) : (
               profile.subjects.map(s => (
                 <View key={s.id} style={subj.row}>
                   <Text style={subj.icon}>{s.drink_icon}</Text>
-                  <View style ={{flex: 1}}>
+                  <View style={{flex: 1}}>
                     <Text style={subj.name}>{s.name}</Text>
                     <Text style={subj.hours}>{formatTime(subjectHours[s.name] || 0)}</Text>
                   </View>
-                  <TouchableOpacity onPress={() => handleDelete(s.id, s.name)}>
-                    <Icon name="trash-outline" size={20} color="#c0392b" />
-                  </TouchableOpacity>
                 </View>
               ))
             )}
           </ScrollView>
 
-          {/* Add subject form */}
-          <CustomInput
-            placeholder="New Subject Name"
-            value={subjectName}
-            onChangeText={setSubjectName}
-            editable={!isAdding}
-          />
-          <TouchableOpacity
-            style={subj.drinkSelector}
-            onPress={() => setShowDrinkPicker(!showDrinkPicker)}
-            disabled={isAdding}>
-            <Text style={subj.drinkSelectorText}>Icon: {selectedDrink} ▾</Text>
-          </TouchableOpacity>
-          {showDrinkPicker && (
-            <View style={subj.drinkGrid}>
-              {DRINK_ICONS.map(d => (
-                <TouchableOpacity
-                  key={d.name}
-                  style={subj.drinkOpt}
-                  onPress={() => {
-                    setSelectedDrink(d.name);
-                    setShowDrinkPicker(false);
-                  }}>
-                  <Text style={subj.drinkEmoji}>{d.name}</Text>
-                  <Text style={subj.drinkLabel}>{d.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-
           <View style={modal.row}>
             <TouchableOpacity
               style={[modal.btn, modal.cancel]}
-              onPress={onClose}
-              disabled={isAdding}>
+              onPress={onClose}>
               <Text style={modal.btnTxt}>Close</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[modal.btn, modal.save]}
-              onPress={handleAdd}
-              disabled={isAdding}>
-              <Text style={modal.btnTxt}>
-                {isAdding ? 'Adding...' : 'Add Subject'}
-              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -436,7 +339,6 @@ export default function ProfileScreen() {
         }}
       />
 
-      {/* Manage Subjects Modal */}
       <SubjectsModal
         visible={managingProfile !== null}
         profile={managingProfile}
@@ -630,23 +532,6 @@ const subj = StyleSheet.create({
     marginVertical: 16,
     fontSize: 14,
   },
-  drinkSelector: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 10,
-    alignItems: 'center',
-  },
-  drinkSelectorText: {fontSize: 16, color: '#333'},
-  drinkGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 8,
-    marginBottom: 12,
-  },
-  drinkOpt: {width: '33%', alignItems: 'center', padding: 8},
   drinkEmoji: {fontSize: 28},
   drinkLabel: {fontSize: 11, color: '#666', marginTop: 4},
   hours: {

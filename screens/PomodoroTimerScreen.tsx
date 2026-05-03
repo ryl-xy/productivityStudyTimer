@@ -19,9 +19,11 @@ export default function PomodoroTimerScreen({
 }: PomodoroTimerScreenProps) {
   const {subjectName} = route.params;
   const {addTime} = usePersistentTimer(); // Get the addTime function
+  const{addStudySession} = useStudy(); // Get the addStudySession function from context
   const [time, setTime] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [sessionType, setSessionType] = useState<'work' | 'break'>('work');
+  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [sessionCount, setSessionCount] = useState(1);
   const [completedSessions, setCompletedSessions] = useState(0);
   const [totalStudyTime, setTotalStudyTime] = useState(0);
@@ -60,6 +62,7 @@ export default function PomodoroTimerScreen({
   const handleTimerComplete = () => {
     Vibration.vibrate(500);
     setIsRunning(false);
+    setSessionStartTime(null);
 
     if (sessionType === 'work') {
       // Work session completed - add 25 minutes to study time
@@ -111,7 +114,12 @@ export default function PomodoroTimerScreen({
     }
   };
 
-  const startTimer = () => setIsRunning(true);
+  const startTimer = () => {
+    if(!sessionStartTime){
+      setSessionStartTime(Date.now());
+    }
+    setIsRunning(true);
+  };
   const pauseTimer = () => setIsRunning(false);
 
   const resetTimer = () => {
@@ -144,30 +152,41 @@ export default function PomodoroTimerScreen({
   };
 
   const finishStudy = async () => {
-    const{addStudySession} = useStudy(); // Get the addStudySession function from context
     pauseTimer();
 
-    // Add all completed study time to the total cumulative timer
-    if (totalStudyTime > 0) {
-      await addTime(totalStudyTime);
+    try{
+      let actualTime = totalStudyTime;
 
-      const minutes = Math.floor(totalStudyTime / 60);
-      await addStudySession(0, subjectName, minutes, 'pomodoro');
-    }
+      // Add partial session time if user stops early
+      if (sessionType === 'work' && sessionStartTime) {
+        const elapsedSeconds = Math.floor((Date.now() - sessionStartTime) / 1000);
+        actualTime += elapsedSeconds;
+      }
 
-    const totalHours = Math.floor(totalStudyTime / 3600);
-    const totalMinutes = Math.floor((totalStudyTime % 3600) / 60);
+      if (actualTime > 0) {
+        await addTime(actualTime);
 
-    Alert.alert(
-      '🎉 Great Work!',
-      `You completed ${completedSessions} Pomodoro session(s) for ${subjectName}!\n\nTotal study time: ${totalHours}h ${totalMinutes}m\n\nYour cumulative timer has been updated!`,
-      [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ],
-    );
+        const minutes = Math.floor(actualTime / 60);
+        await addStudySession(0, subjectName, minutes, 'pomodoro');
+      }
+
+      const totalHours = Math.floor(actualTime / 3600);
+      const totalMinutes = Math.floor((actualTime % 3600) / 60);
+
+      Alert.alert(
+        '🎉 Great Work!',
+        `You completed ${completedSessions} Pomodoro session(s) for ${subjectName}!\n\nTotal study time: ${totalHours}h ${totalMinutes}m\n\nYour cumulative timer has been updated!`,
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ],
+      );
+    } catch (error) {
+      console.error('Error finishing study session:', error);
+      Alert.alert('Error', 'There was an error saving your study session. Please try again.');
+    };
   };
 
   return (
