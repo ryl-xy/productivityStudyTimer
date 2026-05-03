@@ -61,13 +61,13 @@ export const saveStudySession = (
   });
 };
 
-export const getTotalStudyTime = (): Promise<number> => {
+export const getTotalStudyTime = (profileId: number): Promise<number> => {
   return new Promise((resolve, reject) => {
     const db = database();
     db.transaction((tx: any) => {
       tx.executeSql(
-        'SELECT SUM(minutes) as total FROM study_sessions;',
-        [],
+        'SELECT SUM(minutes) as total FROM study_sessions WHERE profile_id = ?;',
+        [profileId],
         (_: any, { rows }: any) => {
           const total = rows.item(0)?.total || 0;
           console.log('Total study time:', total);
@@ -79,13 +79,13 @@ export const getTotalStudyTime = (): Promise<number> => {
   });
 };
 
-export const getStudyTimeBySubject = (subjectName: string): Promise<number> => {
+export const getStudyTimeBySubject = (profileId: number, subjectName: string): Promise<number> => {
   return new Promise((resolve, reject) => {
     const db = database();
     db.transaction((tx: any) => {
       tx.executeSql(
-        'SELECT SUM(minutes) as total FROM study_sessions WHERE subject_name = ?;',
-        [subjectName],
+        'SELECT SUM(minutes) as total FROM study_sessions WHERE profile_id = ? AND subject_name = ?;',
+        [profileId, subjectName],
         (_: any, { rows }: any) => {
           const total = rows.item(0)?.total || 0;
           console.log(`Total time for ${subjectName}:`, total);
