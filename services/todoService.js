@@ -4,6 +4,10 @@ const cors = require('cors');
 const app = express();
 const DB = 'studytime.sqlite';
 
+// Initialize database on startup
+const initializeDatabase = require('./generateDatabase.js');
+initializeDatabase();
+
 app.use(cors());
 app.use(express.json());
 

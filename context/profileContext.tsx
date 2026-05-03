@@ -113,6 +113,8 @@ export function ProfileProvider({children}: {children: ReactNode}) {
       }
     } catch (error) {
       console.error('Failed to load profiles from API:', error);
+      setProfiles([]);
+      setActiveProfileState(null);
     } finally {
       setIsLoading(false);
     }

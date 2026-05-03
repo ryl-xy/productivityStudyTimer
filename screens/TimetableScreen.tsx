@@ -549,7 +549,7 @@ export default function TimetableScreen() {
       {/* List */}
       {daySchedules.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>📅</Text>
+          <Icon name="calendar-outline" size={60} color="#b9b7b7" />
           <Text style={styles.emptyTitle}>
             No schedules for {DAY_SHORT[selectedDay]}
           </Text>
