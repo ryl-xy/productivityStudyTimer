@@ -4,6 +4,7 @@ import {
   getStudyTimeBySubject,
   saveStudySession,
 } from '../services/studyService';
+import { useProfile } from './profileContext';
 
 interface StudyContextType {
   totalFocusTime: number;
@@ -21,10 +22,15 @@ interface StudyProviderProps {
 
 export const StudyProvider: React.FC<StudyProviderProps> = ({ children }) => {
   const [totalFocusTime, setTotalFocusTime] = useState<number>(0);
+  const { activeProfile } = useProfile();
 
   const refreshTotalTime = async (): Promise<void> => {
     try {
-      const total = await getTotalStudyTime();
+      if (!activeProfile) {
+        setTotalFocusTime(0);
+        return;
+      }
+      const total = await getTotalStudyTime(activeProfile.id as number);
       setTotalFocusTime(total);
     } catch (error) {
       console.error('Error refreshing stats:', error);
@@ -38,7 +44,11 @@ export const StudyProvider: React.FC<StudyProviderProps> = ({ children }) => {
     timerType: string
   ): Promise<boolean> => {
     try {
-      await saveStudySession(subjectId, subjectName, minutes, timerType);
+      if (!activeProfile) {
+        console.error('No active profile selected');
+        return false;
+      }
+      await saveStudySession(activeProfile.id as number, subjectId, subjectName, minutes, timerType);
       await refreshTotalTime();
       return true;
     } catch (error) {
@@ -49,7 +59,10 @@ export const StudyProvider: React.FC<StudyProviderProps> = ({ children }) => {
 
   const getSubjectStudyTime = async (subjectName: string): Promise<number> => {
     try {
-      const time = await getStudyTimeBySubject(subjectName);
+      if (!activeProfile) {
+        return 0;
+      }
+      const time = await getStudyTimeBySubject(activeProfile.id as number, subjectName);
       return time;
     } catch (error) {
       console.error('Error getting subject time:', error);
@@ -59,7 +72,7 @@ export const StudyProvider: React.FC<StudyProviderProps> = ({ children }) => {
 
   useEffect(() => {
     refreshTotalTime();
-  }, []);
+  }, [activeProfile]);
 
   const formatTime = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);

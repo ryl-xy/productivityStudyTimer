@@ -21,6 +21,7 @@ export const initDatabase = (): void => {
     tx.executeSql(
       `CREATE TABLE IF NOT EXISTS study_sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        profile_id INTEGER NOT NULL,
         subject_id INTEGER,
         subject_name TEXT,
         minutes INTEGER NOT NULL,
@@ -35,6 +36,7 @@ export const initDatabase = (): void => {
 };
 
 export const saveStudySession = (
+  profileId: number,
   subjectId: number,
   subjectName: string,
   minutes: number,
@@ -44,10 +46,10 @@ export const saveStudySession = (
     const db = database();
     db.transaction((tx: any) => {
       tx.executeSql(
-        'INSERT INTO study_sessions (subject_id, subject_name, minutes, timer_type) VALUES (?, ?, ?, ?);',
-        [subjectId, subjectName, minutes, timerType],
+        'INSERT INTO study_sessions (profile_id, subject_id, subject_name, minutes, timer_type) VALUES (?, ?, ?, ?, ?);',
+        [profileId, subjectId, subjectName, minutes, timerType],
         (_: any, result: any) => {
-          console.log('Session saved:', minutes, 'minutes for', subjectName);
+          console.log('Session saved:', minutes, 'minutes for', subjectName, 'in profile', profileId);
           resolve(result);
         },
         (_: any, error: any) => {
@@ -94,3 +96,4 @@ export const getStudyTimeBySubject = (subjectName: string): Promise<number> => {
     });
   });
 };
+
