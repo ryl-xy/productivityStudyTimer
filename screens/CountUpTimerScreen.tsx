@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import {usePersistentTimer} from '../hooks/usePersistentTimer';
 import {CountUpTimerScreenProps} from '../types/navigation';
+import { useStudy } from '../context/studyContext.tsx'; 
 
 export default function CountUpTimerScreen({
   navigation,
@@ -57,11 +58,15 @@ export default function CountUpTimerScreen({
       .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const finishStudy = () => {
+  const finishStudy = async () => {
+    const {addStudySession} = useStudy(); // Get the addStudySession and formatTime functions from context
     pauseTimer();
 
     if (seconds > 0) {
       addTime(seconds);
+
+      const minutes = Math.floor(seconds / 60);
+      await addStudySession(0, subjectName, minutes, 'count-up');
     }
 
     const timeSpent = formatTime();

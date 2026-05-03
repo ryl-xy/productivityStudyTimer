@@ -14,6 +14,7 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useProfile, Profile, Subject} from '../context/profileContext.tsx';
 import {CustomInput} from '../components/UI.tsx';
+import { useStudy } from '../context/studyContext.tsx';
 
 const AVATAR_OPTIONS = [
   '🎓',
@@ -80,7 +81,7 @@ function ProfileFormModal({
             {initial ? 'Edit Profile' : 'New Profile'}
           </Text>
           <Text style={modal.label}>Name</Text>
-          \
+          
           <CustomInput
             placeholder="e.g. Alice"
             value={name}
@@ -127,14 +128,40 @@ function SubjectsModal({
   onClose: () => void;
 }) {
   const {addSubjectToProfile, removeSubjectFromProfile} = useProfile();
+  const {getSubjectStudyTime, formatTime} = useStudy();
   const [subjectName, setSubjectName] = useState('');
   const [selectedDrink, setSelectedDrink] = useState('☕');
   const [showDrinkPicker, setShowDrinkPicker] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [subjectHours, setSubjectHours] = useState<{ [key: string]: number }>({});
 
-  if (!profile) return null;
+   React.useEffect(() => {
+    if(visible && profile) {
+      loadSubjectHours();
+    }
+  }, [visible, profile]);
+
+  const loadSubjectHours = async () => {
+    if (!profile) return;
+    const hours: { [key: string]: number } = {};
+    for (const subject of profile.subjects) {
+      try {
+        const time = await getSubjectStudyTime(subject.name);
+        hours[subject.name] = time;
+      } catch (error) {
+        console.error(`Error fetching study time for subject ${subject.name}:`, error);
+        hours[subject.name] = 0;
+      }
+    }
+    setSubjectHours(hours);
+  };
 
   const handleAdd = async () => {
+    if (!profile) {
+      Alert.alert('Error', 'No active profile selected.');
+      return;
+    }
+
     if (!subjectName.trim()) {
       Alert.alert('Error', 'Please enter a subject name.');
       return;
@@ -153,6 +180,7 @@ function SubjectsModal({
       setSubjectName('');
       setSelectedDrink('☕');
       setShowDrinkPicker(false);
+      await loadSubjectHours();
     } catch (error) {
       Alert.alert('Error', 'Failed to add subject. Please try again.');
       console.error('Error adding subject:', error);
@@ -162,6 +190,7 @@ function SubjectsModal({
   };
 
   const handleDelete = (subjectId: string | number, subjectName: string) => {
+    if (!profile) return;
     Alert.alert(
       'Remove Subject',
       `Remove "${subjectName}" from this profile?`,
@@ -175,6 +204,8 @@ function SubjectsModal({
       ],
     );
   };
+
+  if (!profile) return null;
 
   return (
     <Modal visible={visible} transparent animationType="slide">
@@ -191,7 +222,10 @@ function SubjectsModal({
               profile.subjects.map(s => (
                 <View key={s.id} style={subj.row}>
                   <Text style={subj.icon}>{s.drink_icon}</Text>
-                  <Text style={subj.name}>{s.name}</Text>
+                  <View style ={{flex: 1}}>
+                    <Text style={subj.name}>{s.name}</Text>
+                    <Text style={subj.hours}>{formatTime(subjectHours[s.name] || 0)}</Text>
+                  </View>
                   <TouchableOpacity onPress={() => handleDelete(s.id, s.name)}>
                     <Icon name="trash-outline" size={20} color="#c0392b" />
                   </TouchableOpacity>
@@ -615,4 +649,9 @@ const subj = StyleSheet.create({
   drinkOpt: {width: '33%', alignItems: 'center', padding: 8},
   drinkEmoji: {fontSize: 28},
   drinkLabel: {fontSize: 11, color: '#666', marginTop: 4},
+  hours: {
+    fontSize: 12,
+    color: '#8b4513',
+    fontWeight: '500',
+  },
 });

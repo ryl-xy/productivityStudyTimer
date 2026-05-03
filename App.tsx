@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createStackNavigator} from '@react-navigation/stack';
@@ -19,6 +19,7 @@ import TimetableScreen from './screens/TimetableScreen';
 import {ProfileProvider} from './context/profileContext';
 import {LogBox} from 'react-native';
 import { StudyProvider } from './context/studyContext.tsx';
+import { initDatabase } from './services/studyService.ts';
 
 LogBox.ignoreLogs([
   'Non-serializable values were found in the navigation state',
@@ -54,6 +55,11 @@ function HomeStackNavigator() {
 }
 
 export default function App() {
+  useEffect(() => {
+    initDatabase();
+    console.log('Database initialized');
+  }, []);
+  
   return (
     <ProfileProvider>
       <StudyProvider>

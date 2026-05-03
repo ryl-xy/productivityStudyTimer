@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import {PomodoroTimerScreenProps} from '../types/navigation';
 import {usePersistentTimer} from '../hooks/usePersistentTimer';
+import { useStudy } from '../context/studyContext.tsx';
 
 export default function PomodoroTimerScreen({
   navigation,
@@ -143,11 +144,15 @@ export default function PomodoroTimerScreen({
   };
 
   const finishStudy = async () => {
+    const{addStudySession} = useStudy(); // Get the addStudySession function from context
     pauseTimer();
 
     // Add all completed study time to the total cumulative timer
     if (totalStudyTime > 0) {
       await addTime(totalStudyTime);
+
+      const minutes = Math.floor(totalStudyTime / 60);
+      await addStudySession(0, subjectName, minutes, 'pomodoro');
     }
 
     const totalHours = Math.floor(totalStudyTime / 3600);
