@@ -2,9 +2,11 @@ import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, ImageBackground} from 'react-native';
 import {usePersistentTimer} from '../hooks/usePersistentTimer';
 import {HomeScreenProps} from '../types/navigation';
+import { useStudy } from '../context/studyContext.tsx';
 
 export default function HomeScreen({navigation}: HomeScreenProps) {
   const {formattedTime, isRunning, startTimer, stopTimer} = usePersistentTimer();
+  const {totalFocusTime, formatTime} = useStudy();
 
   return (
     <ImageBackground
@@ -16,7 +18,7 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
 
         <View style={styles.timerCard}>
           <Text style={styles.label}>Total Focus Time</Text>
-          <Text style={styles.timer}>{formattedTime}</Text>
+          <Text style={styles.timer}>{formatTime(totalFocusTime)}</Text>
         </View>
 
         <TouchableOpacity

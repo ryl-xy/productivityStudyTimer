@@ -14,6 +14,7 @@ import Toast from 'react-native-toast-message';
 import {TimerSelectionScreenProps} from '../types/navigation';
 import {useProfile, Subject} from '../context/profileContext.tsx';
 import {CustomInput} from '../components/UI.tsx';
+import { useStudy } from '../context/studyContext.tsx';
 
 const DRINK_ICONS = [
   {id: '1', name: '☕', label: 'Coffee'},
@@ -22,33 +23,34 @@ const DRINK_ICONS = [
   {id: '4', name: '🧋', label: 'Bubble Tea'},
 ];
 
-const HARDCODED_SUBJECTS = [
-  {
-    name: 'Mathematics',
-    drink_icon: '☕',
-    color: '#FF5733',
-  },
-  {
-    name: 'English',
-    drink_icon: '🍵',
-    color: '#33FF57',
-  },
-  {
-    name: 'Science',
-    drink_icon: '🥤',
-    color: '#3357FF',
-  },
-  {
-    name: 'History',
-    drink_icon: '🧋',
-    color: '#FF33F5',
-  },
-];
+// const HARDCODED_SUBJECTS = [
+//   {
+//     name: 'Mathematics',
+//     drink_icon: '☕',
+//     color: '#FF5733',
+//   },
+//   {
+//     name: 'English',
+//     drink_icon: '🍵',
+//     color: '#33FF57',
+//   },
+//   {
+//     name: 'Science',
+//     drink_icon: '🥤',
+//     color: '#3357FF',
+//   },
+//   {
+//     name: 'History',
+//     drink_icon: '🧋',
+//     color: '#FF33F5',
+//   },
+// ];
 
 export default function TimerSelectionScreen({
   navigation,
 }: TimerSelectionScreenProps) {
   const {activeProfile, addSubjectToProfile} = useProfile();
+  const {getSubjectStudyTime, formatTime} = useStudy();
 
   const [showAddSubject, setShowAddSubject] = useState(false);
   const [newSubjectName, setNewSubjectName] = useState('');
@@ -56,6 +58,7 @@ export default function TimerSelectionScreen({
   const [showDrinkPicker, setShowDrinkPicker] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [subjectTimes, setSubjectTimes] = useState<{ [key: string]: number }>({});
 
   // Load subjects from active profile
   useEffect(() => {
@@ -63,6 +66,20 @@ export default function TimerSelectionScreen({
       setSubjects(activeProfile.subjects || []);
     }
   }, [activeProfile]);
+
+  useEffect(() => {
+    const loadSubjectTimes = async () => {
+      const times: { [key: string]: number } = {};
+      for (const subject of subjects) {
+        const time = await getSubjectStudyTime(subject.name);
+        times[subject.id.toString()] = time;
+      }
+      setSubjectTimes(times);
+    };
+    if (subjects.length > 0) {
+      loadSubjectTimes();
+    }
+  }, [subjects, getSubjectStudyTime]);
 
   const addSubject = async () => {
     if (!newSubjectName.trim()) {
