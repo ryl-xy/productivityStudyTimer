@@ -13,12 +13,12 @@ export type MainTabParamList = {
 };
 
 export type RootStackParamList = {
-    Main: undefined;
+    AppTabs: undefined;
     TimerFlow: NavigatorScreenParams<TimerStackParamList>; 
 };
 
 //navigation prop types
-export type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Main'>;
+export type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AppTabs'>;
 export type TimerSelectionScreenNavigationProp = StackNavigationProp<TimerStackParamList, 'TimerSelection'>;
 export type CountUpTimerScreenNavigationProp = StackNavigationProp<TimerStackParamList, 'CountUpTimer'>;
 export type PomodoroTimerScreenNavigationProp = StackNavigationProp<TimerStackParamList, 'PomodoroTimer'>;

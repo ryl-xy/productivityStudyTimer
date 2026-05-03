@@ -12,8 +12,8 @@ const STORAGE_KEYS = {
 export const usePersistentTimer = () => {
     const [totalTime, setTotalTime] = useState(0);
     const [isRunning, setIsRunning] = useState(false);
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
-    const lastStartTimeRef = useRef<number | null>(null);
+    const intervalRef = useRef(null);
+    const lastStartTimeRef = useRef(null);
 
     //load saved data on mount
     useEffect(() => {
@@ -60,7 +60,7 @@ export const usePersistentTimer = () => {
         setIsRunning(true);
 
         intervalRef.current = setInterval(() => {
-            if(lasrStartTimeRef.current) {
+            if(lastStartTimeRef.current) {
                 const elapsedSeconds = Math.floor((Date.now() - lastStartTimeRef.current) / 1000);
                 setTotalTime(prev => prev + elapsedSeconds);
                 lastStartTimeRef.current = Date.now();
@@ -74,7 +74,7 @@ export const usePersistentTimer = () => {
             intervalRef.current = null;
         }
         setIsRunning(false);
-        await AsyncStorage.setItem(STORAGE_KETS.IS_TIMER_RUNNING, 'false');
+        await AsyncStorage.setItem(STORAGE_KEYS.IS_TIMER_RUNNING, 'false');
     };
 
     const resetTimer = async () => {

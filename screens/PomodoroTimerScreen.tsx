@@ -1,4 +1,3 @@
-// screens/PomodoroTimerScreen.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -14,14 +13,14 @@ import { usePersistentTimer } from '../hooks/usePersistentTimer';
 
 export default function PomodoroTimerScreen({ navigation, route }: PomodoroTimerScreenProps) {
   const { subjectName } = route.params;
-  const { addTime } = usePersistentTimer(); // Get the addTime function
+  const { addTime } = usePersistentTimer();
   const [time, setTime] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [sessionType, setSessionType] = useState<'work' | 'break'>('work');
   const [sessionCount, setSessionCount] = useState(1);
   const [completedSessions, setCompletedSessions] = useState(0);
   const [totalStudyTime, setTotalStudyTime] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const WORK_DURATION = 25 * 60;
   const BREAK_DURATION = 5 * 60;

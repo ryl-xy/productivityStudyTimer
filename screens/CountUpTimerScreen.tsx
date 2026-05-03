@@ -17,7 +17,7 @@ export default function CountUpTimerScreen({ navigation, route }: CountUpTimerSc
   const { addTime } = usePersistentTimer();
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     return () => {
@@ -63,7 +63,7 @@ export default function CountUpTimerScreen({ navigation, route }: CountUpTimerSc
     }
 
     const timeSpent = formatTime();
-    
+
     Alert.alert(
       'Great job! 🎉',
       `You studied ${subjectName} for ${timeSpent}`,
