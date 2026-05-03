@@ -273,7 +273,7 @@ export default function TimerSelectionScreen({
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => setShowManageModal(true)}>
-          <Icon name="edit-outline" size={24} color="#FFF" />
+          <Icon name="create-outline" size={24} color="#FFF" />
           <Text style={styles.addButtonText}>Manage Subjects</Text>
         </TouchableOpacity>
       </View>
