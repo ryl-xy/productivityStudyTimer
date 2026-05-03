@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 import React, { useState, useEffect, useRef } from 'react';
+=======
+// screens/PomodoroTimerScreen.tsx
+import React, {useState, useEffect, useRef} from 'react';
+>>>>>>> ef48d88d3dd415d43c22a4b056c3279bad464b02
 import {
   View,
   Text,
@@ -8,18 +13,31 @@ import {
   Alert,
   Vibration,
 } from 'react-native';
-import { PomodoroTimerScreenProps } from '../types/navigation';
-import { usePersistentTimer } from '../hooks/usePersistentTimer';
+import {PomodoroTimerScreenProps} from '../types/navigation';
+import {usePersistentTimer} from '../hooks/usePersistentTimer';
 
+<<<<<<< HEAD
 export default function PomodoroTimerScreen({ navigation, route }: PomodoroTimerScreenProps) {
   const { subjectName } = route.params;
   const { addTime } = usePersistentTimer();
+=======
+export default function PomodoroTimerScreen({
+  navigation,
+  route,
+}: PomodoroTimerScreenProps) {
+  const {subjectName} = route.params;
+  const {addTime} = usePersistentTimer(); // Get the addTime function
+>>>>>>> ef48d88d3dd415d43c22a4b056c3279bad464b02
   const [time, setTime] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [sessionType, setSessionType] = useState<'work' | 'break'>('work');
   const [sessionCount, setSessionCount] = useState(1);
   const [completedSessions, setCompletedSessions] = useState(0);
   const [totalStudyTime, setTotalStudyTime] = useState(0);
+<<<<<<< HEAD
+=======
+  // const intervalRef = useRef<NodeJS.Timeout | null>(null);
+>>>>>>> ef48d88d3dd415d43c22a4b056c3279bad464b02
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const WORK_DURATION = 25 * 60;
@@ -54,13 +72,13 @@ export default function PomodoroTimerScreen({ navigation, route }: PomodoroTimer
   const handleTimerComplete = () => {
     Vibration.vibrate(500);
     setIsRunning(false);
-    
+
     if (sessionType === 'work') {
       // Work session completed - add 25 minutes to study time
       const newCompletedCount = completedSessions + 1;
       setCompletedSessions(newCompletedCount);
       setTotalStudyTime(prev => prev + WORK_DURATION);
-      
+
       Alert.alert(
         '🍅 Work Session Complete!',
         `Great job studying ${subjectName}! You've completed ${newCompletedCount} Pomodoro(s). Time for a 5 minute break.`,
@@ -78,7 +96,7 @@ export default function PomodoroTimerScreen({ navigation, route }: PomodoroTimer
             onPress: () => finishStudy(),
             style: 'cancel',
           },
-        ]
+        ],
       );
     } else {
       const nextSession = sessionCount + 1;
@@ -100,7 +118,7 @@ export default function PomodoroTimerScreen({ navigation, route }: PomodoroTimer
             onPress: () => finishStudy(),
             style: 'cancel',
           },
-        ]
+        ],
       );
     }
   };
@@ -139,15 +157,15 @@ export default function PomodoroTimerScreen({ navigation, route }: PomodoroTimer
 
   const finishStudy = async () => {
     pauseTimer();
-    
+
     // Add all completed study time to the total cumulative timer
     if (totalStudyTime > 0) {
       await addTime(totalStudyTime);
     }
-    
+
     const totalHours = Math.floor(totalStudyTime / 3600);
     const totalMinutes = Math.floor((totalStudyTime % 3600) / 60);
-    
+
     Alert.alert(
       '🎉 Great Work!',
       `You completed ${completedSessions} Pomodoro session(s) for ${subjectName}!\n\nTotal study time: ${totalHours}h ${totalMinutes}m\n\nYour cumulative timer has been updated!`,
@@ -156,7 +174,7 @@ export default function PomodoroTimerScreen({ navigation, route }: PomodoroTimer
           text: 'OK',
           onPress: () => navigation.goBack(),
         },
-      ]
+      ],
     );
   };
 
@@ -164,37 +182,37 @@ export default function PomodoroTimerScreen({ navigation, route }: PomodoroTimer
     <ImageBackground
       source={require('../assets/background.jpg')}
       style={styles.background}
-      blurRadius={2}
-    >
+      blurRadius={2}>
       <View style={styles.overlay}>
-        <TouchableOpacity 
-          style={styles.closeButton} 
+        <TouchableOpacity
+          style={styles.closeButton}
           onPress={() => {
             if (isRunning) {
               Alert.alert(
                 'Exit Timer?',
                 'Your current session is in progress. Progress will be lost if you exit.',
                 [
-                  { text: 'Cancel', style: 'cancel' },
-                  { text: 'Exit', onPress: () => navigation.goBack() }
-                ]
+                  {text: 'Cancel', style: 'cancel'},
+                  {text: 'Exit', onPress: () => navigation.goBack()},
+                ],
               );
             } else {
               navigation.goBack();
             }
-          }}
-        >
+          }}>
           <Text style={styles.closeButtonText}>✕</Text>
         </TouchableOpacity>
 
         <Text style={styles.subjectTitle}>🍅 {subjectName}</Text>
-        
+
         <View style={styles.sessionInfo}>
           <Text style={styles.sessionType}>
             {sessionType === 'work' ? '📖 Focus Time' : '☕ Break Time'}
           </Text>
           <Text style={styles.sessionCount}>Pomodoro #{sessionCount}</Text>
-          <Text style={styles.completedCount}>Completed: {completedSessions}</Text>
+          <Text style={styles.completedCount}>
+            Completed: {completedSessions}
+          </Text>
           <Text style={styles.totalTime}>
             Total Study: {Math.floor(totalStudyTime / 60)} min
           </Text>
@@ -203,7 +221,7 @@ export default function PomodoroTimerScreen({ navigation, route }: PomodoroTimer
         <View style={styles.timerCard}>
           <Text style={styles.timer}>{formatTime()}</Text>
           <View style={styles.progressBarContainer}>
-            <View style={[styles.progressBar, { width: `${getProgress()}%` }]} />
+            <View style={[styles.progressBar, {width: `${getProgress()}%`}]} />
           </View>
         </View>
 
@@ -217,7 +235,7 @@ export default function PomodoroTimerScreen({ navigation, route }: PomodoroTimer
               <Text style={styles.buttonText}>⏸ Pause</Text>
             </TouchableOpacity>
           )}
-          
+
           <TouchableOpacity style={styles.resetButton} onPress={resetTimer}>
             <Text style={styles.buttonText}>⟳ Reset</Text>
           </TouchableOpacity>
@@ -238,7 +256,7 @@ export default function PomodoroTimerScreen({ navigation, route }: PomodoroTimer
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1 },
+  background: {flex: 1},
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.85)',

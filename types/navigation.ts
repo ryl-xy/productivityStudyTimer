@@ -1,48 +1,51 @@
-import { StackNavigationProp } from '@react-navigation/stack';
-import { NavigatorScreenParams, RouteProp } from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {NavigatorScreenParams, RouteProp} from '@react-navigation/native';
 
-//routes and parameters
 export type TimerStackParamList = {
-    TimerSelection: undefined;
-    CountUpTimer: { subjectName: string };
-    PomodoroTimer: { subjectName: string };
-};
-
-export type MainTabParamList = {
-    Home: undefined;
+  TimerSelection: undefined;
+  CountUpTimer: {subjectName: string; taskId?: number; taskName?: string};
+  PomodoroTimer: {subjectName: string};
 };
 
 export type RootStackParamList = {
-    AppTabs: undefined;
-    TimerFlow: NavigatorScreenParams<TimerStackParamList>; 
+  Main: undefined;
+  TimerFlow: NavigatorScreenParams<TimerStackParamList>;
 };
 
-//navigation prop types
-export type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AppTabs'>;
+export type TodoStackParamList = {
+  TodoList: undefined;
+};
+
+export type MainTabParamList = {
+  Home: NavigatorScreenParams<RootStackParamList>;
+  Todo: undefined;
+  Timetable: undefined;
+  Profiles: undefined;
+};
+
+export type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Main'>;
 export type TimerSelectionScreenNavigationProp = StackNavigationProp<TimerStackParamList, 'TimerSelection'>;
 export type CountUpTimerScreenNavigationProp = StackNavigationProp<TimerStackParamList, 'CountUpTimer'>;
 export type PomodoroTimerScreenNavigationProp = StackNavigationProp<TimerStackParamList, 'PomodoroTimer'>;
+export type TodoScreenNavigationProp = StackNavigationProp<TodoStackParamList, 'TodoList'>;
 
-//route prop types
 export type CountUpTimerScreenRouteProp = RouteProp<TimerStackParamList, 'CountUpTimer'>;
 export type PomodoroTimerScreenRouteProp = RouteProp<TimerStackParamList, 'PomodoroTimer'>;
 
-//combined prop types
 export type CountUpTimerScreenProps = {
-    navigation: CountUpTimerScreenNavigationProp;
-    route: CountUpTimerScreenRouteProp;
+  navigation: CountUpTimerScreenNavigationProp;
+  route: CountUpTimerScreenRouteProp;
 };
-
 export type PomodoroTimerScreenProps = {
-    navigation: PomodoroTimerScreenNavigationProp;
-    route: PomodoroTimerScreenRouteProp;
+  navigation: PomodoroTimerScreenNavigationProp;
+  route: PomodoroTimerScreenRouteProp;
 };
-
 export type TimerSelectionScreenProps = {
-    navigation: TimerSelectionScreenNavigationProp;
+  navigation: TimerSelectionScreenNavigationProp;
 };
-
 export type HomeScreenProps = {
-    navigation: HomeScreenNavigationProp;
+  navigation: HomeScreenNavigationProp;
 };
-
+export type ToDoListScreenProp = {
+  navigation: TodoScreenNavigationProp;
+};
