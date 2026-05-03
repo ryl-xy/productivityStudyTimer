@@ -126,29 +126,7 @@ function SubjectsModal({
   profile: Profile | null;
   onClose: () => void;
 }) {
-  // const {getSubjectStudyTime, formatTime} = useStudy();
-  // const [subjectHours, setSubjectHours] = useState<{ [key: string]: number }>({});
 
-  // React.useEffect(() => {
-  //   if (visible && profile) {
-  //     loadSubjectHours();
-  //   }
-  // }, [visible, profile]);
-
-  // const loadSubjectHours = async () => {
-  //   if (!profile) return;
-  //   const hours: { [key: string]: number } = {};
-  //   for (const subject of profile.subjects) {
-  //     try {
-  //       const time = await getSubjectStudyTime(subject.name);
-  //       hours[subject.name] = time;
-  //     } catch (error) {
-  //       console.error(`Error fetching study time for subject ${subject.name}:`, error);
-  //       hours[subject.name] = 0;
-  //     }
-  //   }
-  //   setSubjectHours(hours);
-  // };
 
   if (!profile) return null;
 
